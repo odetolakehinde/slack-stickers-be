@@ -1,0 +1,7 @@
+postgres/pgdata
+tmp
+.idea
+*.env
+src/coverage.txt
+.DS_Store
+.env

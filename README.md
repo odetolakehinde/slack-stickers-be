@@ -38,6 +38,18 @@ _Below is an example of how you can install and set up your app.
    ```sh
    git clone https://github.com/odetolakehinde/slack-stickers-be.git
    ```
+##### Things to know and to get started with it's engineering.
+
+- This project runs with a docker. You only need to execute `docker-compose up` from your favorite terminal. Keep in mind that the first time, it will run for a while and download some stuff, mafo!
+- Golang is used with its ninja frameworks such gin framework for http handling. APIs are in rest API (gin)
+
+##### So, welcome to Go!.
+
+The main source code is in the `src` directory. Don't be scared!<br/>
+###### Once docker is running, you can always access the app via the follow:<br/>
+
+- Health check: `http://localhost:6001`
+- Rest API endpoint: `http://localhost:6001/api/v1`
 
 ## Roadmap
 See the [open issues](https://github.com/odetolakehinde/slack-stickers-be/issues) for a full list of proposed features (and known issues).

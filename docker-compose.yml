@@ -1,0 +1,14 @@
+version: '3.1'
+
+services:
+  backend:
+    env_file:
+      - ./src/.env
+    build:
+      context: .
+      args:
+        app_env: ${APP_ENV}
+    volumes:
+      - .:/go/src/github.com/odetolakehinde/slack-stickers-be
+    ports:
+      - "6001:6001"

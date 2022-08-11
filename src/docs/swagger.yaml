@@ -1,0 +1,105 @@
+basePath: /api
+definitions:
+  media.uploadRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  model.GenericResponse:
+    properties:
+      code:
+        description: |-
+          The http response code
+
+          Required: true
+          Example: 200
+        type: integer
+      data:
+        description: |-
+          The http response data in cases where the request was processed successfully (optional)
+
+          Example: {"id": "uuid", "name": "john doe"}
+      error:
+        description: |-
+          The error message (optional)
+
+          Example: cannot process this request at this time (optional)
+        type: string
+      message:
+        description: |-
+          The success message (optional)
+
+          Example: User has been created successfully (optional)
+        type: string
+      page:
+        description: Page is the pagination info
+    type: object
+host: localhost:2008
+info:
+  contact:
+    email: slackstickers@gmail.com
+    name: Slack Stickers
+  description: This documents all rest endpoints exposed by this application. Please
+    support us @ buymeacoffee.com/slackstickers
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Slack Stickers API documentation
+  version: 1.0.0
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Takes the user email and password and returns user and token details
+      parameters:
+      - description: Upload Request
+        in: body
+        name: uploadRequest
+        required: true
+        schema:
+          $ref: '#/definitions/media.uploadRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.GenericResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/media.uploadRequest'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.GenericResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/model.GenericResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.GenericResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/model.GenericResponse'
+              type: object
+        "502":
+          description: Bad Gateway
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.GenericResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/model.GenericResponse'
+              type: object
+      summary: This uploads stickers into the database. Keep in mind that it checks
+        to ensure that it dfors
+      tags:
+      - Auth
+swagger: "2.0"

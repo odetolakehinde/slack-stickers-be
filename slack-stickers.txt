@@ -1,0 +1,9 @@
+Shortcut
+- CallbackID - send_sticker_shortcut
+- Endpoint URL - api/v1/slack/shortcut
+
+Slash Commands
+- Endpoint URL - api/v1/slack/slash-command
+
+
+token=7GjWSMAd8Ngadaz56cHsBXb6&team_id=T02A0HT1881&team_domain=segsalerty&channel_id=C030B9GMBNG&channel_name=vuejs-golang-mentorship&user_id=U029JTS8CJ1&user_name=kehinde&command=%!F(MISSING)sticker&text=&api_app_id=A03TE3V7FQT&is_enterprise_install=false&response_url=https%!A(MISSING)%!F(MISSING)%!F(MISSING)hooks.slack.com%!F(MISSING)commands%!F(MISSING)T02A0HT1881%!F(MISSING)3966692373909%!F(MISSING)T8Rli9hub43LJ3FjmQ39Or5D&trigger_id=3969659861474.2340605042273.ad336406b2253db7675a3c9065546421

@@ -42,7 +42,7 @@ const (
 	// SortOrderDESC for descending sorting
 	SortOrderDESC SortOrder = "DESC"
 	// GinContextKey constant that holds the Gin context key
-	GinContextKey Key = "INSURA_GinContextKey"
+	GinContextKey Key = "SlACK_STICKERS_GinContextKey"
 )
 
 // GinContextFromContext gets a gin context from a context.Context

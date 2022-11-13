@@ -8,7 +8,6 @@ RUN touch /tmp/runner-build-errors.log
 COPY . /go/src/github.com/odetolakehinde/slack-stickers-be
 WORKDIR /go/src/github.com/odetolakehinde/slack-stickers-be/src
 
-#RUN go mod download  -o insura-arteri-be
 RUN go get ./
 RUN go build
 RUN go get github.com/pilu/fresh

@@ -9,6 +9,7 @@ import (
 	_ "github.com/odetolakehinde/slack-stickers-be/src/docs"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/api/media"
+	slackApi "github.com/odetolakehinde/slack-stickers-be/src/api/slack"
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
@@ -39,4 +40,5 @@ func New(z zerolog.Logger, ev *environment.Env, engine *gin.Engine, a controller
 func (h *Handler) Build() {
 	v1 := h.api.Group("/v1")
 	media.New(v1, *h.logger, h.application, h.env)
+	slackApi.New(v1, *h.logger, h.application, h.env)
 }

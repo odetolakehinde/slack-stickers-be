@@ -9,7 +9,8 @@ go fmt ./...
 echo "do a go mod tidy"
 go mod tidy
 echo "running golangci-lint"
-golangci-lint run ./... -v
+cd ../
+golangci-lint run ./... -v --config .golangci.yml
 echo "running tests with coverage flag"
 # shellcheck disable=SC2006
 go test `go list ./... | grep -v example` -coverprofile=coverage.txt -covermode=atomic

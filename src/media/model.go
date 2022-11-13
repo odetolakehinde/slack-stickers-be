@@ -5,4 +5,6 @@ type (
 	UploadPayload struct {
 		Name string
 	}
+
+	// CloudinaryResponse
 )

@@ -9,8 +9,4 @@ const (
 	ColorText = "#F26722"
 	// IconURL url to the icon of the slack message
 	IconURL = ""
-	// SLACK_BOT_TOKEN slack token to be used for the slack api
-	SLACK_BOT_TOKEN = ""
-	// SLACK_APP_TOKEN for socket mode
-	SLACK_APP_TOKEN = ""
 )

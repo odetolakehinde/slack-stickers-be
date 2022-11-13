@@ -25,9 +25,9 @@ type Provider struct {
 func New(z zerolog.Logger, e *environment.Env) *Provider {
 	l := z.With().Str(helper.LogStrKeyLevel, name).Logger()
 	api := slack.New(
-		SLACK_BOT_TOKEN,
+		e.Get("SLACK_BOT_TOKEN"),
 		slack.OptionDebug(true),
-		slack.OptionAppLevelToken(SLACK_APP_TOKEN),
+		slack.OptionAppLevelToken(e.Get("SLACK_APP_TOKEN")),
 		slack.OptionLog(log.New(os.Stdout, "api: ", log.Lshortfile|log.LstdFlags)),
 	)
 

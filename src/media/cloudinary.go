@@ -27,7 +27,7 @@ type (
 
 // NewCloudinary initializes a new instance of Cloudinary
 func NewCloudinary(l zerolog.Logger, ev *environment.Env) *Cloudinary {
-	cld, err := cloudinary.NewFromParams(model.CLOUDINARY_CLOUD_NAME, model.CLOUDINARY_API_KEY, model.CLOUDINARY_SECRET_KEY)
+	cld, err := cloudinary.NewFromParams(ev.Get("CLOUDINARY_CLOUD_NAME"), ev.Get("CLOUDINARY_API_KEY"), ev.Get("CLOUDINARY_SECRET_KEY"))
 	if err != nil {
 		l.Err(err).Msg("unable to connect to cloudinary")
 		return nil

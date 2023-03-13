@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/odetolakehinde/slack-stickers-be/src/model"
 )
 
 // MockService is a mock of Service interface.
@@ -34,53 +35,31 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// UploadSticker mocks base method.
-func (m *MockService) UploadSticker(ctx context.Context, name string) error {
+// SearchByTag mocks base method.
+func (m *MockService) SearchByTag(ctx context.Context, tag string) ([]*model.Sticker, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadSticker", ctx, name)
+	ret := m.ctrl.Call(m, "SearchByTag", ctx, tag)
+	ret0, _ := ret[0].([]*model.Sticker)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchByTag indicates an expected call of SearchByTag.
+func (mr *MockServiceMockRecorder) SearchByTag(ctx, tag interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchByTag", reflect.TypeOf((*MockService)(nil).SearchByTag), ctx, tag)
+}
+
+// UploadSticker mocks base method.
+func (m *MockService) UploadSticker(ctx context.Context, name, details string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadSticker", ctx, name, details)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UploadSticker indicates an expected call of UploadSticker.
-func (mr *MockServiceMockRecorder) UploadSticker(ctx, name interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) UploadSticker(ctx, name, details interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadSticker", reflect.TypeOf((*MockService)(nil).UploadSticker), ctx, name)
-}
-
-// MockmediaProvider is a mock of mediaProvider interface.
-type MockmediaProvider struct {
-	ctrl     *gomock.Controller
-	recorder *MockmediaProviderMockRecorder
-}
-
-// MockmediaProviderMockRecorder is the mock recorder for MockmediaProvider.
-type MockmediaProviderMockRecorder struct {
-	mock *MockmediaProvider
-}
-
-// NewMockmediaProvider creates a new mock instance.
-func NewMockmediaProvider(ctrl *gomock.Controller) *MockmediaProvider {
-	mock := &MockmediaProvider{ctrl: ctrl}
-	mock.recorder = &MockmediaProviderMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockmediaProvider) EXPECT() *MockmediaProviderMockRecorder {
-	return m.recorder
-}
-
-// SendDynamicEmail mocks base method.
-func (m *MockmediaProvider) SendDynamicEmail(ctx context.Context, payload UploadPayload) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendDynamicEmail", ctx, payload)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SendDynamicEmail indicates an expected call of SendDynamicEmail.
-func (mr *MockmediaProviderMockRecorder) SendDynamicEmail(ctx, payload interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendDynamicEmail", reflect.TypeOf((*MockmediaProvider)(nil).SendDynamicEmail), ctx, payload)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadSticker", reflect.TypeOf((*MockService)(nil).UploadSticker), ctx, name, details)
 }

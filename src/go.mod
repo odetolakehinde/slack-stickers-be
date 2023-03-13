@@ -20,6 +20,7 @@ require (
 	github.com/jackc/pgtype v1.12.0 // indirect
 	github.com/joho/godotenv v1.4.0
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/rs/zerolog v1.26.0

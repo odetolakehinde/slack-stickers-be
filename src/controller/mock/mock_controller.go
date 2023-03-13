@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -46,4 +47,46 @@ func (m *MockOperations) Middleware() *middleware.Middleware {
 func (mr *MockOperationsMockRecorder) Middleware() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Middleware", reflect.TypeOf((*MockOperations)(nil).Middleware))
+}
+
+// SearchByTag mocks base method.
+func (m *MockOperations) SearchByTag(ctx context.Context, tag string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchByTag", ctx, tag)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SearchByTag indicates an expected call of SearchByTag.
+func (mr *MockOperationsMockRecorder) SearchByTag(ctx, tag interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchByTag", reflect.TypeOf((*MockOperations)(nil).SearchByTag), ctx, tag)
+}
+
+// SendSticker mocks base method.
+func (m *MockOperations) SendSticker(ctx context.Context, channelID, imageURL string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendSticker", ctx, channelID, imageURL)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendSticker indicates an expected call of SendSticker.
+func (mr *MockOperationsMockRecorder) SendSticker(ctx, channelID, imageURL interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSticker", reflect.TypeOf((*MockOperations)(nil).SendSticker), ctx, channelID, imageURL)
+}
+
+// ShowSearchModal mocks base method.
+func (m *MockOperations) ShowSearchModal(ctx context.Context, channelID, triggerID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ShowSearchModal", ctx, channelID, triggerID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ShowSearchModal indicates an expected call of ShowSearchModal.
+func (mr *MockOperationsMockRecorder) ShowSearchModal(ctx, channelID, triggerID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShowSearchModal", reflect.TypeOf((*MockOperations)(nil).ShowSearchModal), ctx, channelID, triggerID)
 }

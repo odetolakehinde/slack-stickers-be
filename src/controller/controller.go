@@ -21,8 +21,8 @@ type Operations interface {
 	Middleware() *middleware.Middleware
 
 	SendSticker(ctx context.Context, channelID, imageURL string) error
-	ShowSearchModal(ctx context.Context, channelID, triggerID string) error
-	SearchByTag(ctx context.Context, tag string) error
+	ShowSearchModal(ctx context.Context, triggerID, channelID string) error
+	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID string, externalViewID *string) error
 }
 
 // Controller object to hold necessary reference to other dependencies

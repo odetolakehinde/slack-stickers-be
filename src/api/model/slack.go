@@ -12,7 +12,7 @@ type ShortcutPayload struct {
 	UserName            string `schema:"user_name"`
 	Command             string `schema:"command"`
 	Text                string `schema:"text"`
-	ApiAppID            string `schema:"api_app_id"`
+	APIAppID            string `schema:"api_app_id"`
 	IsEnterpriseInstall string `schema:"is_enterprise_install"`
 	ResponseURL         string `schema:"response_url"`
 	CallbackID          string `schema:"callback_id"`

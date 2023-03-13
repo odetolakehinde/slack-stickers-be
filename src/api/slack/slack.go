@@ -4,18 +4,19 @@ package media
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/slack-go/slack"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/schema"
+	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog"
+	"github.com/slack-go/slack"
 
 	restModel "github.com/odetolakehinde/slack-stickers-be/src/api/model"
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
+	"github.com/odetolakehinde/slack-stickers-be/src/model"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 )
 
@@ -92,19 +93,67 @@ func (s slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
-		var i slack.InteractionCallback
+		var (
+			i             slack.InteractionCallback
+			tag           string
+			indexToReturn = "0"
+		)
 		err = json.Unmarshal([]byte(parsedBody["payload"][0]), &i)
 		if err != nil {
 			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		// Note there might be a better way to get this info, but I figured this structure out from looking at the json response
-		tag := i.View.State.Values["Tag"]["tag"].Value
-		fmt.Println(tag)
+		switch i.Type {
+		case model.SubmissionViewType:
+			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {
+				// they actually wanna send the message. Let us proceed
+				var details Block
 
-		err = s.controller.SearchByTag(context.Background(), tag)
-		restModel.OkResponse(c, http.StatusOK, "Shortcut initiated", "response")
+				err = mapstructure.Decode(i.View.Blocks.BlockSet[1], &details)
+				if err != nil {
+					s.logger.Error().Msgf("%v", err)
+					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+					return
+				}
+
+				channelToSendSticker := i.View.CallbackID
+				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL)
+				if err != nil {
+					s.logger.Error().Msgf("%v", err)
+					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+					return
+				}
+
+				c.String(http.StatusOK, "Hurray! You've sent your sticker")
+				return
+			}
+
+			// this is the initial search
+			if i.View.CallbackID == model.InitialDataSearchID {
+				// Note there might be a better way to get this info, but I figured this structure out from looking at the json response
+				tag = i.View.State.Values["Tag"]["tag"].Value
+			}
+		case model.BlockActionsViewType:
+			if len(i.ActionCallback.BlockActions) > 0 {
+				if i.ActionCallback.BlockActions[0].ActionID == model.ActionIDShuffle {
+					indexToReturn = i.ActionCallback.BlockActions[0].Value
+					tag = i.View.PrivateMetadata
+				}
+			}
+		}
+
+		externalViewID := i.View.ExternalID
+
+		err = s.controller.SearchByTag(context.Background(), i.TriggerID, tag, indexToReturn, i.View.CallbackID, &externalViewID)
+		if err != nil {
+			s.logger.Error().Msgf("%v", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		//restModel.OkResponse(c, http.StatusOK, "Shortcut initiated", "response")
+		return
 	}
 }
 
@@ -130,13 +179,21 @@ func (s slackHandler) slashCommandUsed() gin.HandlerFunc {
 			s.logger.Err(err).Msg("e don happen")
 		}
 
-		err = s.controller.ShowSearchModal(context.Background(), req.ChannelID, req.TriggerID)
+		if len(req.Text) < 1 {
+			// they did not pass anything else asides the slash command
+			err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID)
+		} else {
+			// something else was passed asides the slash command
+			tag := req.Text
+			err = s.controller.SearchByTag(context.Background(), req.TriggerID, tag, "0", req.ChannelID, nil)
+		}
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
+		//restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
+		return
 	}
 }

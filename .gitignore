@@ -1,8 +1,7 @@
 postgres/pgdata
 tmp
 .idea
-*.env
 src/coverage.txt
 slack-stickers.txt
 .DS_Store
-.env
+dev.env

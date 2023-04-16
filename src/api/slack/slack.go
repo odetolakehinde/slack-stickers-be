@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/schema"
 	"github.com/mitchellh/mapstructure"
@@ -18,6 +19,7 @@ import (
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
+	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
 
 type slackHandler struct {
@@ -40,6 +42,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 	slackGroup.POST("/send-message", slack.sendMessage())
 	slackGroup.POST("/interactivity", slack.interactivityUsed())
 	slackGroup.POST("/slash-command", slack.slashCommandUsed())
+	slackGroup.POST("/auth", slack.saveAuthDetails())
 }
 
 // sendMessage handles authentication for users
@@ -51,23 +54,8 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 // @Success 201 {object} model.GenericResponse{data=uploadRequest}
 // @Failure 400,401,502 {object} model.GenericResponse{error=model.GenericResponse}
 // @Router /api/v1/slack/send-message [post]
-func (s slackHandler) sendMessage() gin.HandlerFunc {
+func (s *slackHandler) sendMessage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//var req uploadRequest
-		//
-		//// run the validation first
-		//if err := c.ShouldBindJSON(&req); err != nil {
-		//	s.logger.Error().Msgf("%v", err)
-		//	restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
-		//	return
-		//}
-		//
-		//err := restModel.ValidateRequest(req)
-		//if err != nil {
-		//	s.logger.Error().Msgf("%v", err)
-		//	restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
-		//	return
-		//}
 
 		err := s.controller.SendSticker(context.Background(), "", "")
 		if err != nil {
@@ -80,7 +68,7 @@ func (s slackHandler) sendMessage() gin.HandlerFunc {
 	}
 }
 
-func (s slackHandler) interactivityUsed() gin.HandlerFunc {
+func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestBody, err := ioutil.ReadAll(c.Request.Body)
 		if err != nil {
@@ -157,7 +145,7 @@ func (s slackHandler) interactivityUsed() gin.HandlerFunc {
 	}
 }
 
-func (s slackHandler) slashCommandUsed() gin.HandlerFunc {
+func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req restModel.ShortcutPayload
 
@@ -195,5 +183,51 @@ func (s slackHandler) slashCommandUsed() gin.HandlerFunc {
 
 		//restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
 		return
+	}
+}
+
+func (s *slackHandler) saveAuthDetails() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var (
+			err error
+			req model.SlackAuthDetails
+		)
+
+		requestID := requestid.Get(c)
+		endpoint := c.FullPath()
+
+		log := s.logger.With().Str(helper.LogEndpointLevel, endpoint).
+			Str(helper.LogStrRequestIDLevel, requestID).Logger()
+
+		if err = c.ShouldBind(&req); err != nil {
+			log.Err(err).Msg("bad request")
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			c.Abort()
+			return
+		}
+
+		err = restModel.ValidateRequest(req)
+		if err != nil {
+			log.Err(err).Msg("saveAuthDetails ValidateRequest failed")
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		log.Info().Interface(helper.LogStrPayloadLevel, req).Msg("payload received")
+
+		// ?code=2340605042273.5035101494320.d3f307a058180eabfe05863dc33af1e610a6c20723c38d419a6bb85837e67d43
+
+		err = s.controller.SaveAuthDetails(context.Background(), req)
+		if err != nil {
+			// there is an error.
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			c.Abort()
+			return
+		}
+
+		log.Info().Interface(helper.LogStrResponseLevel, true).Msg("response returned")
+
+		c.Abort()
+		restModel.OkResponse(c, http.StatusOK, "Details saved successfully", true)
 	}
 }

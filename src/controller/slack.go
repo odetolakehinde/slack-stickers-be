@@ -2,7 +2,10 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
+
+	"github.com/odetolakehinde/slack-stickers-be/src/model"
 )
 
 // SendSticker sends a sticker to the specified channel
@@ -38,6 +41,24 @@ func (c *Controller) SearchByTag(ctx context.Context, triggerID, tag, countToRet
 			c.logger.Err(err).Msg("slackService.ShowSearchResultModal failed")
 			return err
 		}
+	}
+
+	return nil
+}
+
+// SaveAuthDetails handles function to safe the authorization details to redis
+func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error {
+	// change to string
+	bytes, err := json.Marshal(authDetails)
+	if err != nil {
+		panic(err)
+	}
+
+	// save to redis
+	err = c.store.SetValue(ctx, authDetails.TeamID, string(bytes), 0)
+	if err != nil {
+		c.logger.Err(err).Msg("store.SetValue failed")
+		return err
 	}
 
 	return nil

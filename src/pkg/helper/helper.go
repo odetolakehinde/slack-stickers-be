@@ -37,6 +37,16 @@ const (
 	LogStrKeyMethod = "method_name"
 	// LogStrKeyEndpointName log endpoint name value
 	LogStrKeyEndpointName = "endpoint_name"
+	// LogEndpointLevel log endpoint value
+	LogEndpointLevel = "endpoint"
+	// LogStrRequestIDLevel log request id value
+	LogStrRequestIDLevel = "request-id"
+	// LogStrPayloadLevel log payload value
+	LogStrPayloadLevel = "payload"
+	// LogStrPackageLevel log package name value
+	LogStrPackageLevel = "package_name"
+	// LogStrResponseLevel log response level
+	LogStrResponseLevel = "response"
 	// SortOrderASC for ascending sorting
 	SortOrderASC SortOrder = "ASC"
 	// SortOrderDESC for descending sorting

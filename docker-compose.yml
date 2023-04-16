@@ -3,7 +3,7 @@ version: '3.1'
 services:
   backend:
     env_file:
-      - ./src/.env
+      - ./src/dev.env
     build:
       context: .
       args:

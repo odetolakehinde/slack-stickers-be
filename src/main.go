@@ -24,6 +24,7 @@ import (
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/middleware"
+	"github.com/odetolakehinde/slack-stickers-be/src/store"
 )
 
 // @title Slack Stickers API documentation
@@ -62,7 +63,15 @@ func main() {
 	r.Use(GinContextToContextMiddleware())
 	// init our custom middleware
 	newMiddleware := middleware.NewMiddleware(logger, *env)
-	application := controller.New(logger, env, newMiddleware)
+
+	// init the storage
+	redisConn := store.ConnectionInfo{
+		Address:  env.Get("REDIS_SERVER_ADDRESS"),
+		Password: env.Get("REDIS_SERVER_PASSWORD"),
+		Username: env.Get("REDIS_SERVER_USERNAME"),
+	}
+	db := store.NewRedis(env, applicationLogger, redisConn)
+	application := controller.New(logger, env, newMiddleware, db)
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{

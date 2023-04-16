@@ -9,7 +9,9 @@ import (
 )
 
 // Env represents environmental variable instance
-type Env struct{}
+type Env struct {
+	envCache map[string]string
+}
 
 // New creates a new instance of Env and returns an error if any occurs
 func New() (*Env, error) {
@@ -46,4 +48,15 @@ func (e *Env) UseMock() bool {
 	}
 
 	return false
+}
+
+// HelperForMocking [do not use in logic] designed for mocking and in test suite
+func (e *Env) HelperForMocking(cache map[string]string) {
+	e.envCache = cache
+}
+
+// IsSandbox is helper that returns true or false if the environment is in sandbox/testing mode
+func (e *Env) IsSandbox() bool {
+	v := e.Get("IS_SANDBOX_MODE")
+	return strings.EqualFold(v, "true")
 }

@@ -4,7 +4,9 @@ package slack
 import (
 	"log"
 	"os"
+	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
 	"github.com/slack-go/slack"
 
@@ -16,9 +18,10 @@ const name = "messaging.slack"
 
 // Provider object
 type Provider struct {
-	logger zerolog.Logger
-	env    *environment.Env
-	client *slack.Client
+	logger     zerolog.Logger
+	env        *environment.Env
+	client     *slack.Client
+	httpClient *resty.Client
 }
 
 // New creates a new instance of the Slack api consumption
@@ -26,14 +29,23 @@ func New(z zerolog.Logger, e *environment.Env) *Provider {
 	l := z.With().Str(helper.LogStrKeyLevel, name).Logger()
 	api := slack.New(
 		e.Get("SLACK_BOT_TOKEN"),
-		slack.OptionDebug(true),
 		slack.OptionAppLevelToken(e.Get("SLACK_APP_TOKEN")),
 		slack.OptionLog(log.New(os.Stdout, "api: ", log.Lshortfile|log.LstdFlags)),
 	)
 
+	httpClient := resty.New()
+	httpClient.SetTimeout(15 * time.Second)
+
+	if e.IsSandbox() {
+		httpClient.SetDebug(true)
+		httpClient.EnableTrace()
+		api.Debug()
+	}
+
 	return &Provider{
-		logger: l,
-		env:    e,
-		client: api,
+		logger:     l,
+		env:        e,
+		client:     api,
+		httpClient: httpClient,
 	}
 }

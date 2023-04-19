@@ -83,6 +83,6 @@ func (c *Controller) getSlackService(ctx context.Context, teamID string) slack.P
 		//return err
 	}
 
-	s := slack.New(c.logger, c.env, authDetails.Token)
+	s := slack.New(c.logger, c.env, authDetails.AccessToken)
 	return *s
 }

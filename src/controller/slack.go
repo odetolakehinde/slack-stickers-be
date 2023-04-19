@@ -54,11 +54,12 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 	// change to string
 	bytes, err := json.Marshal(authDetails)
 	if err != nil {
-		panic(err)
+		c.logger.Err(err).Msg("json.Marshal failed")
+		return err
 	}
 
 	// save to redis
-	err = c.store.SetValue(ctx, authDetails.TeamID, string(bytes), 0)
+	err = c.store.SetValue(ctx, authDetails.Team.ID, string(bytes), 0)
 	if err != nil {
 		c.logger.Err(err).Msg("store.SetValue failed")
 		return err

@@ -25,10 +25,10 @@ type Provider struct {
 }
 
 // New creates a new instance of the Slack api consumption
-func New(z zerolog.Logger, e *environment.Env) *Provider {
+func New(z zerolog.Logger, e *environment.Env, token string) *Provider {
 	l := z.With().Str(helper.LogStrKeyLevel, name).Logger()
 	api := slack.New(
-		e.Get("SLACK_BOT_TOKEN"),
+		token,
 		slack.OptionAppLevelToken(e.Get("SLACK_APP_TOKEN")),
 		slack.OptionLog(log.New(os.Stdout, "api: ", log.Lshortfile|log.LstdFlags)),
 	)

@@ -3,6 +3,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/rs/zerolog"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/media"
@@ -21,9 +22,9 @@ const packageName = "controller"
 type Operations interface {
 	Middleware() *middleware.Middleware
 
-	SendSticker(ctx context.Context, channelID, imageURL string) error
-	ShowSearchModal(ctx context.Context, triggerID, channelID string) error
-	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID string, externalViewID *string) error
+	SendSticker(ctx context.Context, channelID, imageURL, teamID string) error
+	ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error
+	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
 }
 
@@ -34,9 +35,8 @@ type Controller struct {
 	middleware *middleware.Middleware
 
 	// third party services
-	cloudinary   *media.Cloudinary
-	slackService slack.Provider
-	store        store.Store
+	cloudinary *media.Cloudinary
+	store      store.Store
 }
 
 // New creates a new instance of Controller
@@ -48,16 +48,14 @@ func New(z zerolog.Logger, env *environment.Env, m *middleware.Middleware, store
 
 	// init all third party packages
 	cloudinary := media.NewCloudinary(z, env)
-	s := slack.New(z, env)
 
 	ctrl := &Controller{
 		logger:     l,
 		env:        env,
 		middleware: m,
 
-		cloudinary:   cloudinary,
-		slackService: *s,
-		store:        store,
+		cloudinary: cloudinary,
+		store:      store,
 	}
 
 	op := Operations(ctrl)
@@ -67,4 +65,24 @@ func New(z zerolog.Logger, env *environment.Env, m *middleware.Middleware, store
 // Middleware returns the middleware object exposed by this app
 func (c *Controller) Middleware() *middleware.Middleware {
 	return c.middleware
+}
+
+func (c *Controller) getSlackService(ctx context.Context, teamID string) slack.Provider {
+	c.logger.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
+	// get the token
+	val, err := c.store.GetStringValue(ctx, teamID)
+	if err != nil {
+		c.logger.Err(err).Msg("store.GetStringValue failed")
+		//return err
+	}
+
+	var authDetails model.SlackAuthDetails
+	err = json.Unmarshal([]byte(val), &authDetails)
+	if err != nil {
+		c.logger.Err(err).Msg("json.Unmarshal failed")
+		//return err
+	}
+
+	s := slack.New(c.logger, c.env, authDetails.Token)
+	return *s
 }

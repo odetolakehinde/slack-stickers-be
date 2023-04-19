@@ -9,17 +9,20 @@ import (
 )
 
 // SendSticker sends a sticker to the specified channel
-func (c *Controller) SendSticker(ctx context.Context, channelID, imageURL string) error {
-	return c.slackService.SendSticker(ctx, channelID, imageURL)
+func (c *Controller) SendSticker(ctx context.Context, channelID, imageURL, teamID string) error {
+	slackService := c.getSlackService(ctx, teamID)
+	return slackService.SendSticker(ctx, channelID, imageURL)
 }
 
 // ShowSearchModal shows up the search modal
-func (c *Controller) ShowSearchModal(ctx context.Context, triggerID, channelID string) error {
-	return c.slackService.ShowSearchModal(ctx, triggerID, channelID)
+func (c *Controller) ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error {
+	slackService := c.getSlackService(ctx, teamID)
+	return slackService.ShowSearchModal(ctx, triggerID, channelID)
 }
 
 // SearchByTag shows up the search modal
-func (c *Controller) SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID string, externalViewID *string) error {
+func (c *Controller) SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error {
+	slackService := c.getSlackService(ctx, teamID)
 	result, totalCount, err := c.cloudinary.SearchByTag(ctx, tag)
 	if err != nil {
 		c.logger.Err(err).Msg("cloudinary.SearchByTag failed")
@@ -36,7 +39,7 @@ func (c *Controller) SearchByTag(ctx context.Context, triggerID, tag, countToRet
 	// for now, send the first result
 	if len(result) > 0 {
 		response := result[indexToReturn]
-		err = c.slackService.ShowSearchResultModal(ctx, triggerID, response.URL, response.Name, tag, channelID, externalViewID, indexToReturn)
+		err = slackService.ShowSearchResultModal(ctx, triggerID, response.URL, response.Name, tag, channelID, externalViewID, indexToReturn)
 		if err != nil {
 			c.logger.Err(err).Msg("slackService.ShowSearchResultModal failed")
 			return err

@@ -56,8 +56,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 // @Router /api/v1/slack/send-message [post]
 func (s *slackHandler) sendMessage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		err := s.controller.SendSticker(context.Background(), "", "")
+		err := s.controller.SendSticker(context.Background(), "", "", "")
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -106,7 +105,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				}
 
 				channelToSendSticker := i.View.CallbackID
-				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL)
+				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID)
 				if err != nil {
 					s.logger.Error().Msgf("%v", err)
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -132,8 +131,9 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		}
 
 		externalViewID := i.View.ExternalID
+		teamID := i.View.TeamID
 
-		err = s.controller.SearchByTag(context.Background(), i.TriggerID, tag, indexToReturn, i.View.CallbackID, &externalViewID)
+		err = s.controller.SearchByTag(context.Background(), i.TriggerID, tag, indexToReturn, i.View.CallbackID, teamID, &externalViewID)
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -169,11 +169,11 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 
 		if len(req.Text) < 1 {
 			// they did not pass anything else asides the slash command
-			err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID)
+			err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID, req.TeamID)
 		} else {
 			// something else was passed asides the slash command
 			tag := req.Text
-			err = s.controller.SearchByTag(context.Background(), req.TriggerID, tag, "0", req.ChannelID, nil)
+			err = s.controller.SearchByTag(context.Background(), req.TriggerID, tag, "0", req.ChannelID, req.TeamID, nil)
 		}
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
@@ -214,8 +214,6 @@ func (s *slackHandler) saveAuthDetails() gin.HandlerFunc {
 		}
 
 		log.Info().Interface(helper.LogStrPayloadLevel, req).Msg("payload received")
-
-		// ?code=2340605042273.5035101494320.d3f307a058180eabfe05863dc33af1e610a6c20723c38d419a6bb85837e67d43
 
 		err = s.controller.SaveAuthDetails(context.Background(), req)
 		if err != nil {

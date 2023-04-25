@@ -4,7 +4,6 @@ package media
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -105,8 +104,6 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					return
 				}
 
-				fmt.Printf("this is the i.View details %+v\n", i.View)
-
 				channelToSendSticker := i.View.CallbackID
 				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID)
 				if err != nil {
@@ -137,6 +134,9 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					tag = i.View.PrivateMetadata
 				}
 			}
+		default:
+			// Note there might be a better way to get this info, but I figured this structure out from looking at the json response
+			tag = i.View.State.Values["Tag"]["tag"].Value
 		}
 
 		externalViewID := i.View.ExternalID
@@ -149,7 +149,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
-		//restModel.OkResponse(c, http.StatusOK, "Shortcut initiated", "response")
+		c.String(http.StatusOK, "Shortcut initiated")
 		return
 	}
 }
@@ -186,7 +186,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 		}
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
-			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			c.String(http.StatusBadRequest, err.Error())
 			return
 		}
 

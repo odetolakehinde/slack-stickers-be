@@ -115,7 +115,13 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					return
 				}
 
-				c.String(http.StatusOK, "Hurray! You've sent your sticker")
+				c.JSON(http.StatusOK, struct {
+					ResponseAction string `json:"response_action"`
+				}{
+					ResponseAction: "clear",
+				})
+
+				//c.String(http.StatusOK, "Hurray! You've sent your sticker")
 				return
 			}
 

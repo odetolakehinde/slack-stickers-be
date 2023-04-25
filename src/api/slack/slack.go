@@ -4,6 +4,7 @@ package media
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -103,6 +104,8 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 					return
 				}
+
+				fmt.Printf("this is the i.View details %+v\n", i.View)
 
 				channelToSendSticker := i.View.CallbackID
 				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID)

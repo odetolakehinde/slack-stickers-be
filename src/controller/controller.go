@@ -4,7 +4,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"github.com/ovalfi/api-service/sdk/model/env"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -77,9 +77,9 @@ func (c *Controller) getSlackService(ctx context.Context, teamID string) slack.P
 	)
 
 	// get the token
-	err := c.store.GetValue(context.Background(), env.APICardFees, &keyValue)
+	err := c.store.GetValue(context.Background(), teamID, &keyValue)
 	if err != nil {
-		log.Err(err).Msgf("redis.GetValue[%s] failed", env.APICardFees)
+		log.Err(err).Msgf("redis.GetValue[%s] failed", teamID)
 		//return err
 	}
 

@@ -4,7 +4,9 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"github.com/ovalfi/api-service/sdk/model/env"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/media"
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
@@ -69,15 +71,20 @@ func (c *Controller) Middleware() *middleware.Middleware {
 
 func (c *Controller) getSlackService(ctx context.Context, teamID string) slack.Provider {
 	c.logger.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
+
+	var (
+		keyValue string
+	)
+
 	// get the token
-	val, err := c.store.GetStringValue(ctx, teamID)
+	err := c.store.GetValue(context.Background(), env.APICardFees, &keyValue)
 	if err != nil {
-		c.logger.Err(err).Msg("store.GetStringValue failed")
+		log.Err(err).Msgf("redis.GetValue[%s] failed", env.APICardFees)
 		//return err
 	}
 
 	var authDetails model.SlackAuthDetails
-	err = json.Unmarshal([]byte(val), &authDetails)
+	err = json.Unmarshal([]byte(keyValue), &authDetails)
 	if err != nil {
 		c.logger.Err(err).Msg("json.Unmarshal failed")
 		//return err

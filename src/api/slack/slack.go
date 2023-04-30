@@ -4,6 +4,7 @@ package media
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -91,6 +92,16 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
+		fmt.Printf("this is the i.View details %+v\n", i.View)
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Printf("this is the i.View.State details %+v\n", i.View.State)
+
 		switch i.Type {
 		case model.SubmissionViewType:
 			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {
@@ -137,6 +148,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		default:
 			// Note there might be a better way to get this info, but I figured this structure out from looking at the json response
 			tag = i.View.State.Values["Tag"]["tag"].Value
+			// TODO: this fails when we try to run it in threads.
 		}
 
 		externalViewID := i.View.ExternalID

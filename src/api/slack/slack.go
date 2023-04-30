@@ -102,6 +102,14 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 
 		fmt.Printf("this is the i.View.State details %+v\n", i.View.State)
 
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Printf("this is the i.View.Values details %+v\n", i.View.State.Values)
+
 		switch i.Type {
 		case model.SubmissionViewType:
 			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {

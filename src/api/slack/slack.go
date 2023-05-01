@@ -92,13 +92,23 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
+		fmt.Printf("this is the request body details %+v\n", string(requestBody))
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Printf("this is the payload details %+v\n", parsedBody["payload"])
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
+		fmt.Println("\n-----------------------------------------------")
+
 		fmt.Printf("this is the InteractionCallback details %+v\n", i)
-
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Println("\n-----------------------------------------------")
 
 		switch i.Type {
 		case model.SubmissionViewType:

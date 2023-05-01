@@ -92,15 +92,9 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("this is the request body details %+v\n", string(requestBody))
+		x, _ := json.MarshalIndent(i, "", "")
 
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Printf("this is the payload details %+v\n", parsedBody["payload"])
+		fmt.Printf("this is the request body details %+v\n", string(x))
 
 		fmt.Println("\n-----------------------------------------------")
 

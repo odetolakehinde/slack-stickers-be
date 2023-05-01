@@ -4,7 +4,6 @@ package media
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -92,19 +91,9 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
-		x, _ := json.MarshalIndent(i, "", "")
-
-		fmt.Printf("this is the request body details %+v\n", string(x))
-
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Println("\n-----------------------------------------------")
-
-		fmt.Printf("this is the InteractionCallback details %+v\n", i)
-
 		switch i.Type {
+		case model.ShortcutType:
+			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, i.Team.ID)
 		case model.SubmissionViewType:
 			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {
 				// they actually wanna send the message. Let us proceed
@@ -200,7 +189,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 		}
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
-			c.String(http.StatusBadRequest, err.Error())
+			//c.String(http.StatusBadRequest, err.Error())
 			return
 		}
 

@@ -14,6 +14,9 @@ const (
 	// SubmissionViewType for View submission interaction
 	SubmissionViewType = "view_submission"
 
+	// ShortcutType for shortcuts used
+	ShortcutType = "shortcut"
+
 	// BlockActionsViewType for View block actions interaction
 	BlockActionsViewType = "block_actions"
 

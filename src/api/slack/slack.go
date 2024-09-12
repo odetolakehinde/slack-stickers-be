@@ -4,6 +4,7 @@ package media
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -161,7 +162,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req restModel.ShortcutPayload
 
-		requestBody, err := ioutil.ReadAll(c.Request.Body)
+		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			s.logger.Err(err).Msgf("error parsing response :: %v", err.Error())
 		}

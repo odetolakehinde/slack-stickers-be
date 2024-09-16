@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -57,7 +56,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 // @Router /api/v1/slack/send-message [post]
 func (s *slackHandler) sendMessage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := s.controller.SendSticker(context.Background(), "", "", "")
+		err := s.controller.SendSticker(context.Background(), "", "", "", "")
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -70,7 +69,7 @@ func (s *slackHandler) sendMessage() gin.HandlerFunc {
 
 func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		requestBody, err := ioutil.ReadAll(c.Request.Body)
+		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			s.logger.Err(err).Msgf("error parsing response :: %v", err.Error())
 		}
@@ -95,6 +94,11 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		switch i.Type {
 		case model.ShortcutType:
 			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, i.Team.ID)
+			if err != nil {
+				s.logger.Error().Msgf("%v", err)
+				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+				return
+			}
 		case model.SubmissionViewType:
 			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {
 				// they actually wanna send the message. Let us proceed
@@ -108,7 +112,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				}
 
 				channelToSendSticker := i.View.CallbackID
-				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID)
+				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID, i.MessageTs)
 				if err != nil {
 					s.logger.Error().Msgf("%v", err)
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -154,7 +158,6 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		}
 
 		c.String(http.StatusOK, "Shortcut initiated")
-		return
 	}
 }
 
@@ -195,7 +198,6 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 		}
 
 		//restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
-		return
 	}
 }
 

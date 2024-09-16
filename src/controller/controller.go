@@ -20,11 +20,12 @@ import (
 const packageName = "controller"
 
 // Operations enlist all possible operations for this controller across all modules
+//
 //go:generate mockgen -source controller.go -destination ./mock/mock_controller.go -package mock Operations
 type Operations interface {
 	Middleware() *middleware.Middleware
 
-	SendSticker(ctx context.Context, channelID, imageURL, teamID string) error
+	SendSticker(ctx context.Context, channelID, imageURL, teamID, threadTS string) error
 	ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error
 	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
@@ -69,7 +70,7 @@ func (c *Controller) Middleware() *middleware.Middleware {
 	return c.middleware
 }
 
-func (c *Controller) getSlackService(ctx context.Context, teamID string) slack.Provider {
+func (c *Controller) getSlackService(_ context.Context, teamID string) slack.Provider {
 	c.logger.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
 
 	var (

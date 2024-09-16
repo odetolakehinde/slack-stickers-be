@@ -45,7 +45,7 @@ func (p *Provider) Push(title, msg, slackChannelID string, data map[string]strin
 }
 
 // SendSticker sends the sticker to the conversation.
-func (p *Provider) SendSticker(_ context.Context, slackChannelID, imageURL string) error {
+func (p *Provider) SendSticker(_ context.Context, slackChannelID, imageURL, threadTS string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendSticker").Logger()
 	// build a slack attachment
 	payload := slack.Attachment{
@@ -59,6 +59,7 @@ func (p *Provider) SendSticker(_ context.Context, slackChannelID, imageURL strin
 		slackChannelID,
 		slack.MsgOptionAttachments(payload),
 		slack.MsgOptionAsUser(false), // Add this if you want that the bot would post message as a user, otherwise it will send response using the default slackbot
+		slack.MsgOptionTS(threadTS),  // Provide another message's ts value to make this message a reply. Avoid using a reply's ts value; use its parent instead.
 	)
 	if err != nil {
 		log.Err(err).Msg("slack send sticker failed")
@@ -74,14 +75,14 @@ func (p *Provider) ShowSearchModal(_ context.Context, triggerID, channelID strin
 	modalRequest := generateSearchModalRequest(channelID)
 	_, err := p.client.OpenView(triggerID, modalRequest)
 	if err != nil {
-		fmt.Printf("Error opening view: %s", err)
+		// fmt.Printf("Error opening view: %s", err)
+		p.logger.Err(err).Msgf("Error opening view: %s", err)
 		return err
 	}
-
-	if err != nil {
-		p.logger.Err(err).Msg("slack send sticker failed")
-		return err
-	}
+	// if err != nil {
+	// 	p.logger.Err(err).Msg("slack send sticker failed")
+	// 	return err
+	// }
 
 	return nil
 }
@@ -101,14 +102,15 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, imageURL,
 	}
 
 	if err != nil {
-		fmt.Printf("Error opening view: %s", err)
+		// fmt.Printf("Error opening view: %s", err)
+		p.logger.Err(err).Msgf("Error opening view: %s", err)
 		return err
 	}
 
-	if err != nil {
-		p.logger.Err(err).Msg("slack send sticker failed")
-		return err
-	}
+	// if err != nil {
+	// 	p.logger.Err(err).Msg("slack send sticker failed")
+	// 	return err
+	// }
 
 	return nil
 }

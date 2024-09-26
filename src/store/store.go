@@ -8,6 +8,7 @@ import (
 )
 
 // Store interface
+//
 //go:generate mockgen -source store.go -destination ./mock/mock_store.go -package mock Store
 type Store interface {
 	GetValue(ctx context.Context, key string, result interface{}) error

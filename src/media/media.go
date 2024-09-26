@@ -10,6 +10,7 @@ import (
 const name = "media"
 
 // Service enlist all possible operations for media in the platform
+//
 //go:generate mockgen -source media.go -destination ./mock_media.go -package media Service
 type Service interface {
 	UploadSticker(ctx context.Context, name, details string) error

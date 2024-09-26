@@ -80,7 +80,7 @@ func GetTimePointer(time time.Time) *time.Time {
 	return &time
 }
 
-//GetStringVal return string from pointer
+// GetStringVal return string from pointer
 func GetStringVal(strVal *string) string {
 	var val string
 	if strVal != nil {

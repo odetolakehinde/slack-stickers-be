@@ -56,9 +56,20 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 // @Router /api/v1/slack/send-message [post]
 func (s *slackHandler) sendMessage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := s.controller.SendSticker(context.Background(), "", "", "")
+		s.logger.Info().Msg("Running sendMessage function...")
+		var request SlackSendMessageRequest
+		if err := c.ShouldBindJSON(&request); err != nil {
+			s.logger.Error().Msgf("Error binding JSON ::: %v", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		s.logger.Info().Msgf("Request payload ::: %v", request)
+		s.logger.Info().Msgf("Request made by user: [%v] with username: [%v] to channel [%v] with name as ===> [%v]", request.UserID, request.UserName, request.ChannelID, request.ChannelName)
+
+		err := s.controller.SendSticker(context.Background(), request.ChannelID, "", request.TeamID, request.ThreadTS)
 		if err != nil {
-			s.logger.Error().Msgf("%v", err)
+			s.logger.Error().Msgf("Error sending sticker to slack ::: %v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -107,7 +118,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				}
 
 				channelToSendSticker := i.View.CallbackID
-				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID)
+				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID, i.MessageTs)
 				if err != nil {
 					s.logger.Error().Msgf("%v", err)
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -153,7 +164,6 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		}
 
 		c.String(http.StatusOK, "Shortcut initiated")
-		return
 	}
 }
 
@@ -194,7 +204,6 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 		}
 
 		//restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
-		return
 	}
 }
 

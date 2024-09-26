@@ -20,11 +20,12 @@ import (
 const packageName = "controller"
 
 // Operations enlist all possible operations for this controller across all modules
+//
 //go:generate mockgen -source controller.go -destination ./mock/mock_controller.go -package mock Operations
 type Operations interface {
 	Middleware() *middleware.Middleware
 
-	SendSticker(ctx context.Context, channelID, imageURL, teamID string) error
+	SendSticker(ctx context.Context, channelID, imageURL, teamID, threadTs string) error
 	ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error
 	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error

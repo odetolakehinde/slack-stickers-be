@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/store/mock"
@@ -30,7 +30,7 @@ func (s *Suite) SetupSuite() {
 	})
 	dummyLog := zerolog.Nop()
 
-	s.redisStore = NewRedis(env, dummyLog, ConnectionInfo{})
+	s.redisStore = NewRedis(env, dummyLog, "")
 }
 
 func (s *Suite) AfterTest(_, _ string) {

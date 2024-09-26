@@ -65,12 +65,7 @@ func main() {
 	newMiddleware := middleware.NewMiddleware(logger, *env)
 
 	// init the storage
-	redisConn := store.ConnectionInfo{
-		Address:  env.Get("REDIS_SERVER_ADDRESS"),
-		Password: env.Get("REDIS_SERVER_PASSWORD"),
-		Username: env.Get("REDIS_SERVER_USERNAME"),
-	}
-	db := store.NewRedis(env, applicationLogger, redisConn)
+	db := store.NewRedis(env, applicationLogger, env.Get("REDIS_ADDR"))
 	application := controller.New(logger, env, newMiddleware, db)
 
 	r.GET("/", func(c *gin.Context) {

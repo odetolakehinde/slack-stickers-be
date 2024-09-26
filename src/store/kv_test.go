@@ -30,7 +30,7 @@ func (s *Suite) SetupSuite() {
 	})
 	dummyLog := zerolog.Nop()
 
-	s.redisStore = NewRedis(env, dummyLog, ConnectionInfo{})
+	s.redisStore = NewRedis(env, dummyLog, "")
 }
 
 func (s *Suite) AfterTest(_, _ string) {

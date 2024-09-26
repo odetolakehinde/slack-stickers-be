@@ -9,13 +9,13 @@ import (
 )
 
 // SendSticker sends a sticker to the specified channel
-func (c *Controller) SendSticker(ctx context.Context, channelID, imageURL, teamID string) error {
+func (c *Controller) SendSticker(ctx context.Context, channelID, imageURL, teamID, threadTs string) error {
 	c.logger.Info().
 		Str("imageURL", imageURL).
 		Str("channelID", channelID).
 		Msg("sending sticker")
 	slackService := c.getSlackService(ctx, teamID)
-	return slackService.SendSticker(ctx, channelID, imageURL)
+	return slackService.SendSticker(ctx, channelID, imageURL, threadTs)
 }
 
 // ShowSearchModal shows up the search modal

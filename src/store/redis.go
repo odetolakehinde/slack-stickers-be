@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"crypto/tls"
 	"time"
 
 	redis "github.com/go-redis/redis/v8"
@@ -21,7 +20,8 @@ type (
 		logger          zerolog.Logger
 		connectionError error
 		client          *redis.Client
-		ConnectionInfo  ConnectionInfo
+		// ConnectionInfo  ConnectionInfo
+		url string
 	}
 	// ConnectionInfo connection info
 	ConnectionInfo struct {
@@ -32,12 +32,12 @@ type (
 )
 
 // NewRedis creates a new Redis object as a KeyValue instance
-func NewRedis(e *environment.Env, z zerolog.Logger, c ConnectionInfo) Store {
+func NewRedis(e *environment.Env, z zerolog.Logger, url string) Store {
 	log := z.With().Str(helper.LogStrPackageLevel, packageNameRedis).Logger()
 	r := &Redis{
-		env:            e,
-		logger:         log,
-		ConnectionInfo: c,
+		env:    e,
+		logger: log,
+		url:    url,
 	}
 	// connect to the storage
 	r.connectionError = r.Connect()
@@ -48,21 +48,21 @@ func NewRedis(e *environment.Env, z zerolog.Logger, c ConnectionInfo) Store {
 func (r *Redis) Connect() error {
 	ctx := context.Background()
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     r.ConnectionInfo.Address,
-		Password: r.ConnectionInfo.Password,
-		Username: r.ConnectionInfo.Username,
-		DB:       0, // use default DB,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-		},
-	})
+	opt, err := redis.ParseURL(r.url)
+	if err != nil {
+		r.logger.Err(err).Msg("unable to parse redis server url")
+		r.connectionError = err
+		return err
+	}
+
+	rdb := redis.NewClient(opt)
 	st := rdb.Ping(ctx)
 	if err := st.Err(); err != nil {
 		r.logger.Err(err).Msg("connection to redis server failed")
 		r.connectionError = err
 		return err
 	}
+
 	r.logger.Info().Msg("[success] connected to redis server")
 	r.connectionError = nil // connection did NOT fail.
 	r.client = rdb          // set the client

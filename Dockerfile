@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine
+FROM golang:1.23-alpine
 RUN apk add git
 
 ARG app_env

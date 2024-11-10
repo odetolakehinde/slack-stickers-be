@@ -1,6 +1,6 @@
 module github.com/odetolakehinde/slack-stickers-be/src
 
-go 1.17
+go 1.23
 
 require (
 	github.com/cloudinary/cloudinary-go/v2 v2.1.0
@@ -10,6 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang/mock v1.5.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/schema v1.2.0
@@ -34,7 +35,6 @@ require (
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/goccy/go-json v0.9.10 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

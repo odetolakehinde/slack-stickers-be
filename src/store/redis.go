@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"crypto/tls"
 	"time"
 
 	redis "github.com/go-redis/redis/v8"
@@ -53,14 +52,11 @@ func (r *Redis) Connect() error {
 		Password: r.ConnectionInfo.Password,
 		Username: r.ConnectionInfo.Username,
 		DB:       0, // use default DB,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-		},
 	})
 	st := rdb.Ping(ctx)
 	if err := st.Err(); err != nil {
-		r.logger.Err(err).Msg("connection to redis server failed")
 		r.connectionError = err
+		r.logger.Fatal().Err(err).Msg("connection to redis server failed")
 		return err
 	}
 	r.logger.Info().Msg("[success] connected to redis server")
@@ -82,7 +78,7 @@ func (r *Redis) GetValue(ctx context.Context, key string, result interface{}) er
 	err := r.client.Get(ctx, key).Scan(result)
 	if err != nil {
 		// connecting issue or not able to retrieve from server
-		r.logger.Err(err).Str("key", key).Msgf(ErrFailedToRetrieveValue.Error())
+		r.logger.Err(err).Str("key", key).Msg(ErrFailedToRetrieveValue.Error())
 		return ErrFailedToRetrieveValue
 	}
 	return nil

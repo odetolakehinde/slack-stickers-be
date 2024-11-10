@@ -20,6 +20,7 @@ const (
 )
 
 type (
+	// Cloudinary schema
 	Cloudinary struct {
 		logger zerolog.Logger
 		env    *environment.Env
@@ -45,6 +46,7 @@ func NewCloudinary(l zerolog.Logger, ev *environment.Env) *Cloudinary {
 // UploadSticker uploads a sticker to the database.
 func (c *Cloudinary) UploadSticker(ctx context.Context, name, details string) error {
 	c.logger.Info().Msgf("UploadSticker ::: uploading sticker: %s", name)
+	_ = details
 
 	_, err := c.client.Upload.Upload(ctx, name, uploader.UploadParams{
 		PublicID:                 "",
@@ -116,8 +118,8 @@ func (c *Cloudinary) SearchByTag(ctx context.Context, tag string) ([]*model.Stic
 		Expression: fmt.Sprintf("resource_type:image AND tags:%s*", tag),
 		WithField:  []string{"tags", "context"},
 		SortBy:     []search.SortByField{{"public_id": "desc"}},
-		MaxResults: model.MaxResults})
-
+		MaxResults: model.MaxResults,
+	})
 	if err != nil {
 		c.logger.Err(err).Msg("search by tag failed")
 		return nil, 0, err

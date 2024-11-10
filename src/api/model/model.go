@@ -20,7 +20,7 @@ func ValidateRequest(request interface{}) error {
 		}
 
 		for _, fieldErr := range err.(validator.ValidationErrors) {
-			return fmt.Errorf(fieldError{fieldErr}.String())
+			return fmt.Errorf("%s", fieldError{fieldErr}.String())
 		}
 	}
 

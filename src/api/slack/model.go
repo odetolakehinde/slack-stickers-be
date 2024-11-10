@@ -1,7 +1,7 @@
 package media
 
 type (
-	uploadRequest struct {
+	uploadRequest struct { //nolint:unused
 		Name string `json:"name" validate:"required"`
 	}
 

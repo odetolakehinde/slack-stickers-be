@@ -18,10 +18,10 @@ jobs:
           version: v1.61.0
 
           # Optional: working directory, useful for monorepo
-          working-directory: ./
+          working-directory: ./src
 
           # Optional: golangci-lint command line arguments.
-          args: --config=../.golangci.yml
+          args: --config=.golangci.yml
 
           # Optional: show only new issues if it's a pull request. The default value is `false`.
           # only-new-issues: true

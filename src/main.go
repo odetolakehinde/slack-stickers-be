@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog"
 
 	// This import is needed for swagger to work
+	"github.com/odetolakehinde/slack-stickers-be/src/api/model"
 	_ "github.com/odetolakehinde/slack-stickers-be/src/docs"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/api"
@@ -45,6 +46,13 @@ func main() {
 	_ = os.Setenv("TZ", "Africa/Lagos")
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	applicationLogger := logger.With().Str(helper.LogStrKeyModule, "app").Logger()
+
+	env, err := environment.New()
+	if err != nil {
+		applicationLogger.Fatal().Err(err)
+		panic(err) // panic - this service should not start up
+	}
+
 	r := gin.New()
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowHeaders = []string{"*"}
@@ -53,15 +61,10 @@ func main() {
 	r.Use(ginzerolog.Logger("rest"))
 	r.Use(GinContextToContextMiddleware())
 	r.Use(requestid.New())
+	r.NoRoute(func(c *gin.Context) {
+		model.ErrorResponse(c, http.StatusNotFound, "404 page not found")
+	})
 
-	env, err := environment.New()
-	if err != nil {
-		applicationLogger.Fatal().Err(err)
-		panic(err) // panic - this service should not start up
-	}
-
-	// initialize the app
-	r.Use(GinContextToContextMiddleware())
 	// init our custom middleware
 	newMiddleware := middleware.NewMiddleware(logger, *env)
 

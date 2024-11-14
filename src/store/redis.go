@@ -2,11 +2,15 @@ package store
 
 import (
 	"context"
+	"crypto/tls"
+	"os"
+	"strings"
 	"time"
 
 	redis "github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 
+	"github.com/odetolakehinde/slack-stickers-be/src/model/env"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
@@ -47,12 +51,21 @@ func NewRedis(e *environment.Env, z zerolog.Logger, c ConnectionInfo) Store {
 func (r *Redis) Connect() error {
 	ctx := context.Background()
 
+	var tlsConfig *tls.Config
+	if !strings.EqualFold(os.Getenv(env.RedisTLSEnabled), "false") {
+		tlsConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
+	}
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     r.ConnectionInfo.Address,
-		Password: r.ConnectionInfo.Password,
-		Username: r.ConnectionInfo.Username,
-		DB:       0, // use default DB,
+		Addr:      r.ConnectionInfo.Address,
+		Password:  r.ConnectionInfo.Password,
+		Username:  r.ConnectionInfo.Username,
+		DB:        0, // use default DB,
+		TLSConfig: tlsConfig,
 	})
+
 	st := rdb.Ping(ctx)
 	if err := st.Err(); err != nil {
 		r.connectionError = err

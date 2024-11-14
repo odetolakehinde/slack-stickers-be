@@ -69,7 +69,7 @@ func (r *Redis) Connect() error {
 	st := rdb.Ping(ctx)
 	if err := st.Err(); err != nil {
 		r.connectionError = err
-		r.logger.Fatal().Err(err).Msg("connection to redis server failed")
+		r.logger.Err(err).Msg("connection to redis server failed")
 		return err
 	}
 	r.logger.Info().Msg("[success] connected to redis server")

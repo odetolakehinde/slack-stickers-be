@@ -78,17 +78,13 @@ func (p *Provider) ShowSearchModal(_ context.Context, triggerID, channelID strin
 		return err
 	}
 
-	if err != nil {
-		p.logger.Err(err).Msg("slack send sticker failed")
-		return err
-	}
-
 	return nil
 }
 
 // ShowSearchResultModal triggers the modal to show the user the search result
 func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, imageURL, altText, searchString, channelID string,
-	externalViewID *string, indexToReturn int) error {
+	externalViewID *string, indexToReturn int,
+) error {
 	var err error
 
 	modalRequest := generateSearchResultModal(imageURL, altText, searchString, channelID, indexToReturn)
@@ -102,11 +98,6 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, imageURL,
 
 	if err != nil {
 		fmt.Printf("Error opening view: %s", err)
-		return err
-	}
-
-	if err != nil {
-		p.logger.Err(err).Msg("slack send sticker failed")
 		return err
 	}
 

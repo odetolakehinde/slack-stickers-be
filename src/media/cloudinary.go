@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
+	"github.com/odetolakehinde/slack-stickers-be/src/model/env"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
@@ -30,7 +31,7 @@ type (
 
 // NewCloudinary initializes a new instance of Cloudinary
 func NewCloudinary(l zerolog.Logger, ev *environment.Env) *Cloudinary {
-	cld, err := cloudinary.NewFromParams(ev.Get("CLOUDINARY_CLOUD_NAME"), ev.Get("CLOUDINARY_API_KEY"), ev.Get("CLOUDINARY_SECRET_KEY"))
+	cld, err := cloudinary.NewFromParams(ev.Get(env.CloudinaryCloudName), ev.Get(env.CloudinaryAPIKey), ev.Get(env.CloudinarySecretKey))
 	if err != nil {
 		l.Err(err).Msg("unable to connect to cloudinary")
 		return nil

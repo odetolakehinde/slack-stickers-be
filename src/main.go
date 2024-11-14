@@ -20,6 +20,7 @@ import (
 	// This import is needed for swagger to work
 	"github.com/odetolakehinde/slack-stickers-be/src/api/model"
 	_ "github.com/odetolakehinde/slack-stickers-be/src/docs"
+	e "github.com/odetolakehinde/slack-stickers-be/src/model/env"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/api"
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
@@ -70,9 +71,9 @@ func main() {
 
 	// init the storage
 	redisConn := store.ConnectionInfo{
-		Address:  env.Get("REDIS_SERVER_ADDRESS"),
-		Password: env.Get("REDIS_SERVER_PASSWORD"),
-		Username: env.Get("REDIS_SERVER_USERNAME"),
+		Address:  env.Get(e.RedisServerAddress),
+		Password: env.Get(e.RedisServerPassword),
+		Username: env.Get(e.RedisServerUsername),
 	}
 	db := store.NewRedis(env, applicationLogger, redisConn)
 	application := controller.New(logger, env, newMiddleware, db)
@@ -88,7 +89,7 @@ func main() {
 	h := api.New(logger, env, r, *application)
 	h.Build()
 
-	port := env.Get("SERVER_PORT")
+	port := env.Get(e.ServerPort)
 	if strings.EqualFold(port, "") {
 		port = "6001"
 	}

@@ -91,6 +91,11 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
+		teamID := i.Team.ID
+		channelID := i.Channel.ID
+		responseURL := i.ResponseURL
+		userID := i.User.ID
+
 		switch i.Type {
 		case model.ShortcutType:
 			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, i.Team.ID)
@@ -135,12 +140,65 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				tag = i.View.State.Values["Tag"]["tag"].Value
 			}
 		case model.BlockActionsViewType:
-			if len(i.ActionCallback.BlockActions) > 0 {
-				if i.ActionCallback.BlockActions[0].ActionID == model.ActionIDShuffle {
-					indexToReturn = i.ActionCallback.BlockActions[0].Value
-					tag = i.View.PrivateMetadata
-				}
+			blockActions := i.ActionCallback.BlockActions
+			if len(blockActions) < 1 {
+				restModel.ErrorResponse(c, http.StatusBadRequest, "invalid block action")
+				return
 			}
+
+			if blockActions[0].BlockID == model.StickerActionBlockID {
+				blockValue := blockActions[0].Value
+
+				for _, v := range blockActions {
+					switch v.ActionID {
+					case model.ActionIDSendSticker:
+						var sticker model.StickerBlockActionValue
+						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
+							s.logger.Error().Msgf("%v", err)
+							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+							return
+						}
+
+						err = s.controller.SendSticker(context.Background(), teamID, userID, channelID, responseURL, sticker)
+						if err != nil {
+							s.logger.Error().Msgf("%v", err)
+							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+							return
+						}
+
+						c.String(http.StatusOK, "action is send")
+						return
+
+					case model.ActionIDShuffleSticker:
+						var sticker model.StickerBlockActionValue
+						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
+							s.logger.Error().Msgf("%v", err)
+							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+							return
+						}
+						err = s.controller.ShuffleSticker(context.Background(), teamID, userID, channelID, responseURL, sticker)
+						if err != nil {
+							s.logger.Error().Msgf("%v", err)
+							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+							return
+						}
+						c.String(http.StatusOK, "action is shuffle")
+						return
+
+					case model.ActionIDCancelSticker:
+						if err := s.controller.CancelSticker(context.Background(), teamID, channelID, responseURL); err != nil {
+							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+							return
+						}
+						c.String(http.StatusOK, "action is cancel")
+						return
+					}
+				}
+			} else {
+				indexToReturn = i.ActionCallback.BlockActions[0].Value
+				tag = i.View.PrivateMetadata
+			}
+
 		default:
 			// Note there might be a better way to get this info, but I figured this structure out from looking at the json response
 			tag = i.View.State.Values["Tag"]["tag"].Value

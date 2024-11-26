@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/slack-go/slack"
 
+	"github.com/odetolakehinde/slack-stickers-be/src/model/env"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
@@ -29,7 +30,7 @@ func New(z zerolog.Logger, e *environment.Env, token string) *Provider {
 	l := z.With().Str(helper.LogStrKeyLevel, name).Logger()
 	api := slack.New(
 		token,
-		slack.OptionAppLevelToken(e.Get("SLACK_APP_TOKEN")),
+		slack.OptionAppLevelToken(e.Get(env.SlackAppToken)),
 		slack.OptionLog(log.New(os.Stdout, "api: ", log.Lshortfile|log.LstdFlags)),
 	)
 

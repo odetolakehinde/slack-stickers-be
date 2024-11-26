@@ -7,9 +7,10 @@ import (
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
 )
 
-const name = "media"
+const name = "media" //nolint:unused
 
 // Service enlist all possible operations for media in the platform
+//
 //go:generate mockgen -source media.go -destination ./mock_media.go -package media Service
 type Service interface {
 	UploadSticker(ctx context.Context, name, details string) error

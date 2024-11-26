@@ -80,7 +80,7 @@ func GetTimePointer(time time.Time) *time.Time {
 	return &time
 }
 
-//GetStringVal return string from pointer
+// GetStringVal return string from pointer
 func GetStringVal(strVal *string) string {
 	var val string
 	if strVal != nil {
@@ -184,7 +184,7 @@ func GetTimeVal(timeVal *time.Time) time.Time {
 
 // RandomNumbers generates random numerics with length specified
 func RandomNumbers(max int) string {
-	var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
+	table := [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
 
 	b := make([]byte, max)
 	n, err := io.ReadAtLeast(rand.Reader, b, max)

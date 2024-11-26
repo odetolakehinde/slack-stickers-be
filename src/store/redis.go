@@ -3,11 +3,14 @@ package store
 import (
 	"context"
 	"crypto/tls"
+	"os"
+	"strings"
 	"time"
 
 	redis "github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 
+	"github.com/odetolakehinde/slack-stickers-be/src/model/env"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
@@ -48,19 +51,25 @@ func NewRedis(e *environment.Env, z zerolog.Logger, c ConnectionInfo) Store {
 func (r *Redis) Connect() error {
 	ctx := context.Background()
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     r.ConnectionInfo.Address,
-		Password: r.ConnectionInfo.Password,
-		Username: r.ConnectionInfo.Username,
-		DB:       0, // use default DB,
-		TLSConfig: &tls.Config{
+	var tlsConfig *tls.Config
+	if !strings.EqualFold(os.Getenv(env.RedisTLSEnabled), "false") {
+		tlsConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
-		},
+		}
+	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:      r.ConnectionInfo.Address,
+		Password:  r.ConnectionInfo.Password,
+		Username:  r.ConnectionInfo.Username,
+		DB:        0, // use default DB,
+		TLSConfig: tlsConfig,
 	})
+
 	st := rdb.Ping(ctx)
 	if err := st.Err(); err != nil {
-		r.logger.Err(err).Msg("connection to redis server failed")
 		r.connectionError = err
+		r.logger.Err(err).Msg("connection to redis server failed")
 		return err
 	}
 	r.logger.Info().Msg("[success] connected to redis server")
@@ -82,7 +91,7 @@ func (r *Redis) GetValue(ctx context.Context, key string, result interface{}) er
 	err := r.client.Get(ctx, key).Scan(result)
 	if err != nil {
 		// connecting issue or not able to retrieve from server
-		r.logger.Err(err).Str("key", key).Msgf(ErrFailedToRetrieveValue.Error())
+		r.logger.Err(err).Str("key", key).Msg(ErrFailedToRetrieveValue.Error())
 		return ErrFailedToRetrieveValue
 	}
 	return nil

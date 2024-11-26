@@ -1,5 +1,3 @@
-version: '3.1'
-
 services:
   backend:
     env_file:
@@ -12,3 +10,10 @@ services:
       - .:/go/src/github.com/odetolakehinde/slack-stickers-be
     ports:
       - "6001:6001"
+    depends_on:
+      - redis
+
+  redis:
+    build: ./redis
+    ports:
+      - "6321:6321"

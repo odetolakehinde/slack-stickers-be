@@ -1,3 +1,4 @@
+// Package main
 package main
 
 import (
@@ -17,7 +18,9 @@ import (
 	"github.com/rs/zerolog"
 
 	// This import is needed for swagger to work
+	"github.com/odetolakehinde/slack-stickers-be/src/api/model"
 	_ "github.com/odetolakehinde/slack-stickers-be/src/docs"
+	e "github.com/odetolakehinde/slack-stickers-be/src/model/env"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/api"
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
@@ -44,6 +47,13 @@ func main() {
 	_ = os.Setenv("TZ", "Africa/Lagos")
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	applicationLogger := logger.With().Str(helper.LogStrKeyModule, "app").Logger()
+
+	env, err := environment.New()
+	if err != nil {
+		applicationLogger.Fatal().Err(err)
+		panic(err) // panic - this service should not start up
+	}
+
 	r := gin.New()
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowHeaders = []string{"*"}
@@ -52,23 +62,18 @@ func main() {
 	r.Use(ginzerolog.Logger("rest"))
 	r.Use(GinContextToContextMiddleware())
 	r.Use(requestid.New())
+	r.NoRoute(func(c *gin.Context) {
+		model.ErrorResponse(c, http.StatusNotFound, "404 page not found")
+	})
 
-	env, err := environment.New()
-	if err != nil {
-		applicationLogger.Fatal().Err(err)
-		panic(err) // panic - this service should not start up
-	}
-
-	// initialize the app
-	r.Use(GinContextToContextMiddleware())
 	// init our custom middleware
 	newMiddleware := middleware.NewMiddleware(logger, *env)
 
 	// init the storage
 	redisConn := store.ConnectionInfo{
-		Address:  env.Get("REDIS_SERVER_ADDRESS"),
-		Password: env.Get("REDIS_SERVER_PASSWORD"),
-		Username: env.Get("REDIS_SERVER_USERNAME"),
+		Address:  env.Get(e.RedisServerAddress),
+		Password: env.Get(e.RedisServerPassword),
+		Username: env.Get(e.RedisServerUsername),
 	}
 	db := store.NewRedis(env, applicationLogger, redisConn)
 	application := controller.New(logger, env, newMiddleware, db)
@@ -84,7 +89,7 @@ func main() {
 	h := api.New(logger, env, r, *application)
 	h.Build()
 
-	port := env.Get("SERVER_PORT")
+	port := env.Get(e.ServerPort)
 	if strings.EqualFold(port, "") {
 		port = "6001"
 	}

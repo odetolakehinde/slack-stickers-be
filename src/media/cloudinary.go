@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
+	"github.com/odetolakehinde/slack-stickers-be/src/model/env"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
@@ -20,6 +21,7 @@ const (
 )
 
 type (
+	// Cloudinary schema
 	Cloudinary struct {
 		logger zerolog.Logger
 		env    *environment.Env
@@ -29,7 +31,7 @@ type (
 
 // NewCloudinary initializes a new instance of Cloudinary
 func NewCloudinary(l zerolog.Logger, ev *environment.Env) *Cloudinary {
-	cld, err := cloudinary.NewFromParams(ev.Get("CLOUDINARY_CLOUD_NAME"), ev.Get("CLOUDINARY_API_KEY"), ev.Get("CLOUDINARY_SECRET_KEY"))
+	cld, err := cloudinary.NewFromParams(ev.Get(env.CloudinaryCloudName), ev.Get(env.CloudinaryAPIKey), ev.Get(env.CloudinarySecretKey))
 	if err != nil {
 		l.Err(err).Msg("unable to connect to cloudinary")
 		return nil
@@ -45,6 +47,7 @@ func NewCloudinary(l zerolog.Logger, ev *environment.Env) *Cloudinary {
 // UploadSticker uploads a sticker to the database.
 func (c *Cloudinary) UploadSticker(ctx context.Context, name, details string) error {
 	c.logger.Info().Msgf("UploadSticker ::: uploading sticker: %s", name)
+	_ = details
 
 	_, err := c.client.Upload.Upload(ctx, name, uploader.UploadParams{
 		PublicID:                 "",
@@ -116,8 +119,8 @@ func (c *Cloudinary) SearchByTag(ctx context.Context, tag string) ([]*model.Stic
 		Expression: fmt.Sprintf("resource_type:image AND tags:%s*", tag),
 		WithField:  []string{"tags", "context"},
 		SortBy:     []search.SortByField{{"public_id": "desc"}},
-		MaxResults: model.MaxResults})
-
+		MaxResults: model.MaxResults,
+	})
 	if err != nil {
 		c.logger.Err(err).Msg("search by tag failed")
 		return nil, 0, err

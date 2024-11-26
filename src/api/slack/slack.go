@@ -4,7 +4,7 @@ package media
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -69,7 +69,7 @@ func (s *slackHandler) sendMessage() gin.HandlerFunc {
 
 func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		requestBody, err := ioutil.ReadAll(c.Request.Body)
+		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			s.logger.Err(err).Msgf("error parsing response :: %v", err.Error())
 		}
@@ -94,6 +94,11 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		switch i.Type {
 		case model.ShortcutType:
 			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, i.Team.ID)
+			if err != nil {
+				s.logger.Error().Msgf("%v", err)
+				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+				return
+			}
 		case model.SubmissionViewType:
 			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {
 				// they actually wanna send the message. Let us proceed
@@ -120,7 +125,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					ResponseAction: "clear",
 				})
 
-				//c.String(http.StatusOK, "Hurray! You've sent your sticker")
+				// c.String(http.StatusOK, "Hurray! You've sent your sticker")
 				return
 			}
 
@@ -153,7 +158,6 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		}
 
 		c.String(http.StatusOK, "Shortcut initiated")
-		return
 	}
 }
 
@@ -161,7 +165,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req restModel.ShortcutPayload
 
-		requestBody, err := ioutil.ReadAll(c.Request.Body)
+		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			s.logger.Err(err).Msgf("error parsing response :: %v", err.Error())
 		}
@@ -172,7 +176,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 			return
 		}
 
-		var decoder = schema.NewDecoder()
+		decoder := schema.NewDecoder()
 		err = decoder.Decode(&req, parsedBody)
 		if err != nil {
 			// Handle error;
@@ -189,12 +193,11 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 		}
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
-			//c.String(http.StatusBadRequest, err.Error())
+			// c.String(http.StatusBadRequest, err.Error())
 			return
 		}
 
-		//restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
-		return
+		// restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
 	}
 }
 

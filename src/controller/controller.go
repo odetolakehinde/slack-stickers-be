@@ -20,6 +20,7 @@ import (
 const packageName = "controller"
 
 // Operations enlist all possible operations for this controller across all modules
+//
 //go:generate mockgen -source controller.go -destination ./mock/mock_controller.go -package mock Operations
 type Operations interface {
 	Middleware() *middleware.Middleware
@@ -69,25 +70,23 @@ func (c *Controller) Middleware() *middleware.Middleware {
 	return c.middleware
 }
 
-func (c *Controller) getSlackService(ctx context.Context, teamID string) slack.Provider {
+func (c *Controller) getSlackService(_ context.Context, teamID string) slack.Provider {
 	c.logger.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
 
-	var (
-		keyValue string
-	)
+	var keyValue string
 
 	// get the token
 	err := c.store.GetValue(context.Background(), teamID, &keyValue)
 	if err != nil {
 		log.Err(err).Msgf("redis.GetValue[%s] failed", teamID)
-		//return err
+		// return err
 	}
 
 	var authDetails model.SlackAuthDetails
 	err = json.Unmarshal([]byte(keyValue), &authDetails)
 	if err != nil {
 		c.logger.Err(err).Msg("json.Unmarshal failed")
-		//return err
+		// return err
 	}
 
 	s := slack.New(c.logger, c.env, authDetails.AccessToken)

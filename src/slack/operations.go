@@ -171,6 +171,11 @@ func (p *Provider) CancelStickerPreview(_ context.Context, channelID, responseUR
 func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
 
+	contextElements := []slack.MixedElement{
+		slack.NewTextBlockObject(slack.MarkdownType, FooterText, false, false),
+		slack.NewImageBlockElement("https://example.com/small-image.png", "alt text for image"),
+	}
+
 	blocks := []slack.Block{
 		slack.NewImageBlock(
 			sticker.ImgURL,
@@ -178,11 +183,16 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 			"sticker-image-block",
 			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
 		),
-
 		slack.NewSectionBlock(
-			slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s>.\n_powered by_ <%s>", userID, Site), false, true),
+			slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s>.", userID), false, false),
 			nil, nil,
 		),
+		slack.NewContextBlock(
+			"context-block-id",
+			contextElements...,
+		),
+
+		// contextBlock,
 	}
 
 	_, timestamp, err := p.client.PostMessage(

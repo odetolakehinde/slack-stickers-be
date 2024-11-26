@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/media"
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
@@ -78,7 +77,8 @@ func (c *Controller) Middleware() *middleware.Middleware {
 }
 
 func (c *Controller) getSlackService(_ context.Context, teamID string) slack.Provider {
-	c.logger.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "getSlackService").Logger()
+	log.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
 
 	var keyValue string
 
@@ -86,14 +86,12 @@ func (c *Controller) getSlackService(_ context.Context, teamID string) slack.Pro
 	err := c.store.GetValue(context.Background(), teamID, &keyValue)
 	if err != nil {
 		log.Err(err).Msgf("redis.GetValue[%s] failed", teamID)
-		// return err
 	}
 
 	var authDetails model.SlackAuthDetails
 	err = json.Unmarshal([]byte(keyValue), &authDetails)
 	if err != nil {
-		c.logger.Err(err).Msg("json.Unmarshal failed")
-		// return err
+		log.Err(err).Msg("json.Unmarshal failed")
 	}
 
 	s := slack.New(c.logger, c.env, authDetails.AccessToken)

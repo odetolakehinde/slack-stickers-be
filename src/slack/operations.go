@@ -13,6 +13,7 @@ import (
 
 // Push sends the message to the specified Slack channel
 func (p *Provider) Push(title, msg, slackChannelID string, data map[string]string) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "Push").Logger()
 	footer := "sandbox mode"
 
 	var fields []slack.AttachmentField
@@ -38,11 +39,11 @@ func (p *Provider) Push(title, msg, slackChannelID string, data map[string]strin
 		slack.MsgOptionAsUser(true), // Add this if you want that the bot would post message as a user, otherwise it will send response using the default slackbot
 	)
 	if err != nil {
-		p.logger.Err(err).Str(helper.LogStrKeyMethod, "push").Msg("slack push message failed")
+		log.Err(err).Msg("slack push message failed")
 		return err
 	}
 
-	p.logger.Info().Msgf("message successfully sent to channel %s at %s", channelID, timestamp)
+	log.Info().Msgf("message successfully sent to channel %s at %s", channelID, timestamp)
 	return nil
 }
 
@@ -67,16 +68,17 @@ func (p *Provider) SendMessage(_ context.Context, slackChannelID, imageURL strin
 		return err
 	}
 
-	p.logger.Info().Msgf("sticker successfully sent to channel %s at %s", channelID, timestamp)
+	log.Info().Msgf("sticker successfully sent to channel %s at %s", channelID, timestamp)
 	return nil
 }
 
 // ShowSearchModal triggers the modal to show the user to put in the tag they want to use.
 func (p *Provider) ShowSearchModal(_ context.Context, triggerID, channelID string) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowSearchModal").Logger()
 	modalRequest := generateSearchModalRequest(channelID)
 	_, err := p.client.OpenView(triggerID, modalRequest)
 	if err != nil {
-		fmt.Printf("Error opening view: %s", err)
+		log.Err(err).Msg("OpenView failed")
 		return err
 	}
 
@@ -87,20 +89,22 @@ func (p *Provider) ShowSearchModal(_ context.Context, triggerID, channelID strin
 func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, imageURL, altText, searchString, channelID string,
 	externalViewID *string, indexToReturn int,
 ) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowSearchResultModal").Logger()
 	var err error
 
 	modalRequest := generateSearchResultModal(imageURL, altText, searchString, channelID, indexToReturn)
 	if externalViewID == nil {
 		// we are doing this afresh
-		_, err = p.client.OpenView(triggerID, modalRequest)
+		if _, err = p.client.OpenView(triggerID, modalRequest); err != nil {
+			log.Err(err).Msg("OpenView failed")
+			return err
+		}
 	} else {
 		// let us replace what the guy sees on the screen
-		_, err = p.client.UpdateView(modalRequest, *externalViewID, "", "")
-	}
-
-	if err != nil {
-		fmt.Printf("Error opening view: %s", err)
-		return err
+		if _, err = p.client.UpdateView(modalRequest, *externalViewID, "", ""); err != nil {
+			log.Err(err).Msg("UpdateView failed")
+			return err
+		}
 	}
 
 	return nil

@@ -69,13 +69,17 @@ func (s *slackHandler) sendMessage() gin.HandlerFunc {
 
 func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log := s.logger.With().Str(helper.LogEndpointLevel, c.FullPath()).Logger()
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			s.logger.Err(err).Msgf("error parsing response :: %v", err.Error())
+			log.Err(err).Msg("io.ReadAll failed")
+			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
 		}
 
 		parsedBody, err := url.ParseQuery(string(requestBody))
 		if err != nil {
+			log.Err(err).Msg("url.ParseQuery failed")
 			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -87,6 +91,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		)
 		err = json.Unmarshal([]byte(parsedBody["payload"][0]), &i)
 		if err != nil {
+			log.Err(err).Msg("json.Unmarshal failed")
 			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -100,12 +105,12 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		case model.ShortcutType:
 			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, teamID)
 			if err != nil {
-				s.logger.Error().Msgf("%v", err)
+				log.Err(err).Msg("controller.ShowSearchModal failed")
 				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 				return
 			}
 
-			c.String(http.StatusOK, "Hurray! You've sent your sticker")
+			c.String(http.StatusOK, "success")
 		case model.SubmissionViewType:
 			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {
 				// they actually wanna send the message. Let us proceed
@@ -113,7 +118,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 
 				err = mapstructure.Decode(i.View.Blocks.BlockSet[1], &details)
 				if err != nil {
-					s.logger.Error().Msgf("%v", err)
+					log.Err(err).Msg("mapstructure.Decode failed")
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 					return
 				}
@@ -126,7 +131,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 
 				err = s.controller.SendSticker(context.Background(), teamID, userID, channelToSendSticker, responseURL, sticker)
 				if err != nil {
-					s.logger.Error().Msgf("%v", err)
+					log.Err(err).Msg("controller.SendSticker failed")
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 					return
 				}
@@ -160,43 +165,44 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					case model.ActionIDSendSticker:
 						var sticker model.StickerBlockActionValue
 						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
-							s.logger.Error().Msgf("%v", err)
+							log.Err(err).Msg("json.Unmarshal failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 							return
 						}
 
 						err = s.controller.SendSticker(context.Background(), teamID, userID, channelID, responseURL, sticker)
 						if err != nil {
-							s.logger.Error().Msgf("%v", err)
+							log.Err(err).Msg("controller.SendSticker failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 							return
 						}
 
-						c.String(http.StatusOK, "action is send")
+						c.String(http.StatusOK, "success")
 						return
 
 					case model.ActionIDShuffleSticker:
 						var sticker model.StickerBlockActionValue
 						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
-							s.logger.Error().Msgf("%v", err)
+							log.Err(err).Msg("json.Unmarshal failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 							return
 						}
 						err = s.controller.ShuffleSticker(context.Background(), teamID, userID, channelID, responseURL, sticker)
 						if err != nil {
-							s.logger.Error().Msgf("%v", err)
+							log.Err(err).Msg("controller.ShuffleSticker failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 							return
 						}
-						c.String(http.StatusOK, "action is shuffle")
+						c.String(http.StatusOK, "success")
 						return
 
 					case model.ActionIDCancelSticker:
 						if err := s.controller.CancelSticker(context.Background(), teamID, channelID, responseURL); err != nil {
+							log.Err(err).Msg("controller.CancelSticker failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 							return
 						}
-						c.String(http.StatusOK, "action is cancel")
+						c.String(http.StatusOK, "success")
 						return
 					}
 				}
@@ -215,7 +221,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		teamID = i.View.TeamID
 		err = s.controller.SearchByTag(context.Background(), i.TriggerID, tag, indexToReturn, i.View.CallbackID, teamID, &externalViewID)
 		if err != nil {
-			s.logger.Error().Msgf("%v", err)
+			log.Err(err).Msg("controller.SearchByTag failed")
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -226,15 +232,24 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 
 func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		requestID := requestid.Get(c)
+		log := s.logger.With().
+			Str(helper.LogEndpointLevel, c.FullPath()).
+			Str(helper.LogStrRequestIDLevel, requestID).
+			Logger()
+
 		var req restModel.ShortcutPayload
 
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			s.logger.Err(err).Msgf("error parsing response :: %v", err.Error())
+			log.Err(err).Msg("io.ReadAll failed")
+			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
 		}
 
 		parsedBody, err := url.ParseQuery(string(requestBody))
 		if err != nil {
+			log.Err(err).Msg("url.ParseQuery failed")
 			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -242,20 +257,23 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 		decoder := schema.NewDecoder()
 		err = decoder.Decode(&req, parsedBody)
 		if err != nil {
-			// Handle error;
-			s.logger.Err(err).Msg("e don happen")
+			log.Err(err).Msg("decoder.Decode failed.")
+			return
 		}
 
 		if len(req.Text) < 1 {
 			// they did not pass anything else asides the slash command
-			err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID, req.TeamID)
+			if err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID, req.TeamID); err != nil {
+				log.Err(err).Msg("controller.ShowSearchModal failed")
+				c.String(http.StatusBadRequest, err.Error())
+				return
+			}
 		} else {
-			err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text)
-		}
-		if err != nil {
-			s.logger.Error().Msgf("%v", err)
-			c.String(http.StatusBadRequest, err.Error())
-			return
+			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text); err != nil {
+				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
+				c.String(http.StatusBadRequest, err.Error())
+				return
+			}
 		}
 
 		// restModel.OkResponse(c, http.StatusOK, "Slash command initiated", "response")
@@ -275,7 +293,6 @@ func (s *slackHandler) saveAuthDetails() gin.HandlerFunc {
 		if err := c.ShouldBind(&req); err != nil {
 			log.Err(err).Msg("bad request")
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
-			c.Abort()
 			return
 		}
 
@@ -284,9 +301,11 @@ func (s *slackHandler) saveAuthDetails() gin.HandlerFunc {
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		log.Info().Interface(helper.LogStrPayloadLevel, req).Msg("payload received")
+
+		log.Info().Interface(helper.LogStrPayloadLevel, true).Msg("payload received")
 
 		if err := s.controller.SaveAuthDetails(context.Background(), req); err != nil {
+			log.Err(err).Msg("SaveAuthDetails failed")
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}

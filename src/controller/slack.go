@@ -3,19 +3,20 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
 )
 
-// SendSticker sends a sticker to the specified channel
-func (c *Controller) SendSticker(ctx context.Context, channelID, imageURL, teamID string) error {
+// SendMessage sends a sticker to the specified channel
+func (c *Controller) SendMessage(ctx context.Context, channelID, imageURL, teamID string) error {
 	c.logger.Info().
 		Str("imageURL", imageURL).
 		Str("channelID", channelID).
 		Msg("sending sticker")
 	slackService := c.getSlackService(ctx, teamID)
-	return slackService.SendSticker(ctx, channelID, imageURL)
+	return slackService.SendMessage(ctx, channelID, imageURL)
 }
 
 // ShowSearchModal shows up the search modal
@@ -67,6 +68,63 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 	if err != nil {
 		c.logger.Err(err).Msg("store.SetValue failed")
 		return err
+	}
+
+	return nil
+}
+
+// GetStickerSearchResult shows up the search modal
+func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string) error {
+	slackService := c.getSlackService(ctx, teamID)
+
+	result, totalCount, err := c.cloudinary.SearchByTag(ctx, text)
+	if err != nil {
+		c.logger.Err(err).Msg("cloudinary.SearchByTag failed")
+		return err
+	}
+
+	if totalCount < 1 {
+		return fmt.Errorf("not found")
+	}
+
+	imageURL := result[0].URL
+
+	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL)
+}
+
+// CancelSticker to close sticker preview block
+func (c *Controller) CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error {
+	slackService := c.getSlackService(ctx, teamID)
+	return slackService.CancelStickerPreview(ctx, channelID, responseURL)
+}
+
+// SendSticker to send sticker
+func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+	c.logger.Info().
+		Str("channelID", channelID).
+		Msg("sending sticker")
+	slackService := c.getSlackService(ctx, teamID)
+	return slackService.SendStickerToChannel(ctx, userID, channelID, responseURL, sticker)
+}
+
+// ShuffleSticker to shuffle sticker
+func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+	slackService := c.getSlackService(ctx, teamID)
+	result, totalCount, err := c.cloudinary.SearchByTag(ctx, sticker.Tag)
+	if err != nil {
+		c.logger.Err(err).Msg("cloudinary.SearchByTag failed")
+		return err
+	}
+
+	if sticker.Index >= totalCount {
+		sticker.Index = 0
+	}
+
+	if len(result) > 0 {
+		sticker.ImgURL = result[sticker.Index].URL
+		if err := slackService.ShuffleStickerPreview(ctx, userID, channelID, responseURL, sticker); err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -3,9 +3,11 @@ package slack
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/slack-go/slack"
 
+	"github.com/odetolakehinde/slack-stickers-be/src/model"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
 
@@ -44,9 +46,9 @@ func (p *Provider) Push(title, msg, slackChannelID string, data map[string]strin
 	return nil
 }
 
-// SendSticker sends the sticker to the conversation.
-func (p *Provider) SendSticker(_ context.Context, slackChannelID, imageURL string) error {
-	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendSticker").Logger()
+// SendMessage sends the sticker to the conversation.
+func (p *Provider) SendMessage(_ context.Context, slackChannelID, imageURL string) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendMessage").Logger()
 	// build a slack attachment
 	payload := slack.Attachment{
 		Title:    HeaderText,
@@ -58,7 +60,7 @@ func (p *Provider) SendSticker(_ context.Context, slackChannelID, imageURL strin
 	channelID, timestamp, err := p.client.PostMessage(
 		slackChannelID,
 		slack.MsgOptionAttachments(payload),
-		slack.MsgOptionAsUser(false), // Add this if you want that the bot would post message as a user, otherwise it will send response using the default slackbot
+		slack.MsgOptionAsUser(true),
 	)
 	if err != nil {
 		log.Err(err).Msg("slack send sticker failed")
@@ -101,5 +103,110 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, imageURL,
 		return err
 	}
 
+	return nil
+}
+
+// ShowStickerPreview sends a sticker preview to the specified user as an ephemeral message in the Slack channel
+func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowStickerPreview").Logger()
+	sticker := model.StickerBlockActionValue{
+		Tag:    tag,
+		Index:  0,
+		ImgURL: imageURL,
+	}
+
+	blocks := createStickerPreviewBlock(sticker, true)
+
+	_, _, err := p.client.PostMessage(
+		channelID,
+		slack.MsgOptionPostEphemeral(userID),
+		slack.MsgOptionBlocks(blocks.BlockSet...),
+	)
+	if err != nil {
+		log.Err(err).Msg("PostMessage failed")
+		return err
+	}
+
+	return nil
+}
+
+// ShuffleStickerPreview updates the sticker preview by replacing the original ephemeral message with a new one
+// containing a shuffled sticker, updating the displayed image based on the tag and index.
+func (p *Provider) ShuffleStickerPreview(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShuffleStickerPreview").Logger()
+
+	block := createStickerPreviewBlock(sticker, true)
+
+	_, _, err := p.client.PostMessage(
+		channelID,
+		slack.MsgOptionAsUser(true),
+		slack.MsgOptionPostEphemeral(userID),
+		slack.MsgOptionReplaceOriginal(responseURL),
+		slack.MsgOptionBlocks(block.BlockSet...),
+	)
+	if err != nil {
+		log.Err(err).Msg("PostMessage failed")
+		return err
+	}
+
+	return nil
+}
+
+// CancelStickerPreview removes the sticker preview message from Slack by deleting the original ephemeral message.
+func (p *Provider) CancelStickerPreview(_ context.Context, channelID, responseURL string) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "CancelStickerPreview").Logger()
+	_, _, err := p.client.PostMessage(
+		channelID,
+		slack.MsgOptionDeleteOriginal(responseURL),
+	)
+	if err != nil {
+		log.Err(err).Msg("failed to cancel sticker preview")
+		return err
+	}
+
+	return nil
+}
+
+// SendStickerToChannel sends the specified sticker to the Slack channel as a permanent message,
+func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
+
+	blocks := []slack.Block{
+		slack.NewImageBlock(
+			sticker.ImgURL,
+			sticker.Tag,
+			"sticker-image-block",
+			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
+		),
+
+		slack.NewSectionBlock(
+			slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s>.\n_powered by_ <%s>", userID, Site), false, true),
+			nil, nil,
+		),
+	}
+
+	_, timestamp, err := p.client.PostMessage(
+		channelID,
+		slack.MsgOptionAsUser(true),
+		slack.MsgOptionBlocks(blocks...),
+	)
+	if err != nil {
+		log.Err(err).Msg("PostMessage failed to send sticker")
+		return err
+	}
+
+	if !strings.EqualFold(responseURL, "") {
+		// responseURL wont be blank if its an ephemeral message
+		_, _, err = p.client.PostMessage(
+			channelID,
+			slack.MsgOptionDeleteOriginal(responseURL), // delete ephemeral message
+		)
+		if err != nil {
+			log.Err(err).Msg("failed to delete original ephemeral message")
+			return err
+		}
+	}
+
+	p.logger.Info().Msgf("sticker successfully sent to channel %s at %s", channelID, timestamp)
 	return nil
 }

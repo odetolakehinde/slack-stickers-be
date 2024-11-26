@@ -56,7 +56,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 // @Router /api/v1/slack/send-message [post]
 func (s *slackHandler) sendMessage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := s.controller.SendSticker(context.Background(), "", "", "")
+		err := s.controller.SendMessage(context.Background(), "", "", "")
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -98,12 +98,14 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 
 		switch i.Type {
 		case model.ShortcutType:
-			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, i.Team.ID)
+			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, teamID)
 			if err != nil {
 				s.logger.Error().Msgf("%v", err)
 				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 				return
 			}
+
+			c.String(http.StatusOK, "Hurray! You've sent your sticker")
 		case model.SubmissionViewType:
 			if len(i.View.Blocks.BlockSet) > 1 && i.View.Blocks.BlockSet[1].BlockType() == model.BlockTypeImage {
 				// they actually wanna send the message. Let us proceed
@@ -117,7 +119,12 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				}
 
 				channelToSendSticker := i.View.CallbackID
-				err = s.controller.SendSticker(context.Background(), channelToSendSticker, details.ImageURL, i.View.TeamID)
+				sticker := model.StickerBlockActionValue{
+					Tag:    details.Title.Text,
+					ImgURL: details.ImageURL,
+				}
+
+				err = s.controller.SendSticker(context.Background(), teamID, userID, channelToSendSticker, responseURL, sticker)
 				if err != nil {
 					s.logger.Error().Msgf("%v", err)
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -130,12 +137,11 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					ResponseAction: "clear",
 				})
 
-				// c.String(http.StatusOK, "Hurray! You've sent your sticker")
 				return
 			}
 
 			// this is the initial search
-			if i.View.CallbackID == model.InitialDataSearchID {
+			if i.View.PrivateMetadata == model.InitialDataSearchID {
 				// Note there might be a better way to get this info, but I figured this structure out from looking at the json response
 				tag = i.View.State.Values["Tag"]["tag"].Value
 			}
@@ -206,8 +212,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		}
 
 		externalViewID := i.View.ExternalID
-		teamID := i.View.TeamID
-
+		teamID = i.View.TeamID
 		err = s.controller.SearchByTag(context.Background(), i.TriggerID, tag, indexToReturn, i.View.CallbackID, teamID, &externalViewID)
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
@@ -245,13 +250,11 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 			// they did not pass anything else asides the slash command
 			err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID, req.TeamID)
 		} else {
-			// something else was passed asides the slash command
-			tag := req.Text
-			err = s.controller.SearchByTag(context.Background(), req.TriggerID, tag, "0", req.ChannelID, req.TeamID, nil)
+			err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text)
 		}
 		if err != nil {
 			s.logger.Error().Msgf("%v", err)
-			// c.String(http.StatusBadRequest, err.Error())
+			c.String(http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -261,44 +264,34 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 
 func (s *slackHandler) saveAuthDetails() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var (
-			err error
-			req model.SlackAuthDetails
-		)
-
 		requestID := requestid.Get(c)
-		endpoint := c.FullPath()
+		log := s.logger.With().
+			Str(helper.LogEndpointLevel, c.FullPath()).
+			Str(helper.LogStrRequestIDLevel, requestID).
+			Logger()
 
-		log := s.logger.With().Str(helper.LogEndpointLevel, endpoint).
-			Str(helper.LogStrRequestIDLevel, requestID).Logger()
+		var req model.SlackAuthDetails
 
-		if err = c.ShouldBind(&req); err != nil {
+		if err := c.ShouldBind(&req); err != nil {
 			log.Err(err).Msg("bad request")
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			c.Abort()
 			return
 		}
 
-		err = restModel.ValidateRequest(req)
-		if err != nil {
+		if err := restModel.ValidateRequest(req); err != nil {
 			log.Err(err).Msg("saveAuthDetails ValidateRequest failed")
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
-
 		log.Info().Interface(helper.LogStrPayloadLevel, req).Msg("payload received")
 
-		err = s.controller.SaveAuthDetails(context.Background(), req)
-		if err != nil {
-			// there is an error.
+		if err := s.controller.SaveAuthDetails(context.Background(), req); err != nil {
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
-			c.Abort()
 			return
 		}
 
 		log.Info().Interface(helper.LogStrResponseLevel, true).Msg("response returned")
-
-		c.Abort()
 		restModel.OkResponse(c, http.StatusOK, "Details saved successfully", true)
 	}
 }

@@ -180,7 +180,7 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 		slack.NewImageBlock(
 			sticker.ImgURL,
 			sticker.Tag,
-			"sticker-image-block",
+			model.StickerImageBlockID,
 			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
 		),
 		slack.NewSectionBlock(
@@ -188,11 +188,9 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 			nil, nil,
 		),
 		slack.NewContextBlock(
-			"context-block-id",
+			model.StickerContextBlockID,
 			contextElements...,
 		),
-
-		// contextBlock,
 	}
 
 	_, timestamp, err := p.client.PostMessage(

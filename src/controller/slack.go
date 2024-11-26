@@ -73,7 +73,7 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 	return nil
 }
 
-// GetStickerSearchResult shows up the search modal
+// GetStickerSearchResult shows up the search result
 func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string) error {
 	slackService := c.getSlackService(ctx, teamID)
 

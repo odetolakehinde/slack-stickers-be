@@ -40,8 +40,8 @@ func generateSearchModalRequest(channelID string) slack.ModalViewRequest {
 		Submit:          submitText,
 		PrivateMetadata: model.InitialDataSearchID,
 		CallbackID:      channelID, // we use the channel ID
-		//ClearOnClose:    false,
-		//NotifyOnClose:   false,
+		// ClearOnClose:    false,
+		// NotifyOnClose:   false,
 		ExternalID: uuid.New().String(),
 	}
 }
@@ -78,8 +78,8 @@ func generateSearchResultModal(imageURL, altText, tag, channelID string, indexTo
 		Submit:          submitText,
 		PrivateMetadata: tag,
 		CallbackID:      channelID, // we are using the channel ID for this
-		//ClearOnClose:    false,
-		//NotifyOnClose:   false,
+		// ClearOnClose:    false,
+		// NotifyOnClose:   false,
 		ExternalID: uuid.New().String(),
 	}
 }
@@ -101,7 +101,7 @@ func createStickerPreviewBlock(sticker model.StickerBlockActionValue, isShuffle 
 		slack.NewImageBlock(
 			sticker.ImgURL,
 			sticker.Tag,
-			"",
+			model.StickerImageBlockID,
 			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
 		),
 		slack.NewActionBlock(

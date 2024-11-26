@@ -13,21 +13,35 @@ import (
 // SendMessage sends a sticker to the specified channel
 func (c *Controller) SendMessage(ctx context.Context, channelID, imageURL, teamID string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendMessage").Logger()
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
 	log.Info().Str("imageURL", imageURL).Str("channelID", channelID).Msg("sending sticker")
-	slackService := c.getSlackService(ctx, teamID)
 	return slackService.SendMessage(ctx, channelID, imageURL)
 }
 
 // ShowSearchModal shows up the search modal
 func (c *Controller) ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error {
-	slackService := c.getSlackService(ctx, teamID)
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "ShowSearchModal").Logger()
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
 	return slackService.ShowSearchModal(ctx, triggerID, channelID)
 }
 
 // SearchByTag shows up the search modal
 func (c *Controller) SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SearchByTag").Logger()
-	slackService := c.getSlackService(ctx, teamID)
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
+
 	result, totalCount, err := c.cloudinary.SearchByTag(ctx, tag)
 	if err != nil {
 		log.Err(err).Msg("cloudinary.SearchByTag failed")
@@ -77,8 +91,11 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 // GetStickerSearchResult shows up the search result
 func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "GetStickerSearchResult").Logger()
-
-	slackService := c.getSlackService(ctx, teamID)
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
 
 	result, totalCount, err := c.cloudinary.SearchByTag(ctx, text)
 	if err != nil {
@@ -99,24 +116,38 @@ func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, team
 
 // CancelSticker to close sticker preview block
 func (c *Controller) CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error {
-	slackService := c.getSlackService(ctx, teamID)
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "CancelSticker").Logger()
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
+
 	return slackService.CancelStickerPreview(ctx, channelID, responseURL)
 }
 
 // SendSticker to send sticker
 func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendSticker").Logger()
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
 
 	log.Info().Str("channelID", channelID).Msg("sending sticker")
-	slackService := c.getSlackService(ctx, teamID)
 	return slackService.SendStickerToChannel(ctx, userID, channelID, responseURL, sticker)
 }
 
 // ShuffleSticker to shuffle sticker
 func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "ShuffleSticker").Logger()
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
 
-	slackService := c.getSlackService(ctx, teamID)
 	result, totalCount, err := c.cloudinary.SearchByTag(ctx, sticker.Tag)
 	if err != nil {
 		log.Err(err).Msg("cloudinary.SearchByTag failed")

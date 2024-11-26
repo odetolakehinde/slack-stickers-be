@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/media"
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
@@ -25,8 +24,15 @@ const packageName = "controller"
 type Operations interface {
 	Middleware() *middleware.Middleware
 
-	SendSticker(ctx context.Context, channelID, imageURL, teamID string) error
+	// TODO: would prob delete this
+	SendMessage(ctx context.Context, channelID, imageURL, teamID string) error
 	ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error
+
+	GetStickerSearchResult(ctx context.Context, teamID, userID, channelID, tag string) error
+	CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error
+	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
+	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
+
 	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
 }
@@ -70,25 +76,26 @@ func (c *Controller) Middleware() *middleware.Middleware {
 	return c.middleware
 }
 
-func (c *Controller) getSlackService(_ context.Context, teamID string) slack.Provider {
-	c.logger.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
+func (c *Controller) getSlackService(ctx context.Context, teamID string) (slack.Provider, error) {
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "getSlackService").Logger()
+	log.Info().Str("team_id", teamID).Msg("about to get the slack service now...")
 
 	var keyValue string
 
 	// get the token
-	err := c.store.GetValue(context.Background(), teamID, &keyValue)
+	err := c.store.GetValue(ctx, teamID, &keyValue)
 	if err != nil {
 		log.Err(err).Msgf("redis.GetValue[%s] failed", teamID)
-		// return err
+		return slack.Provider{}, err
 	}
 
 	var authDetails model.SlackAuthDetails
 	err = json.Unmarshal([]byte(keyValue), &authDetails)
 	if err != nil {
-		c.logger.Err(err).Msg("json.Unmarshal failed")
-		// return err
+		log.Err(err).Msg("json.Unmarshal failed")
+		return slack.Provider{}, err
 	}
 
 	s := slack.New(c.logger, c.env, authDetails.AccessToken)
-	return *s
+	return *s, nil
 }

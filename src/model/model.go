@@ -5,8 +5,19 @@ const (
 	// InitialDataSearchID for when the initial search is done
 	InitialDataSearchID = "initial-data-search"
 
-	// ActionIDShuffle shuffle action ID
-	ActionIDShuffle = "shuffle-sticker"
+	// StickerActionBlockID is the block id for the sticker actions button
+	StickerActionBlockID = "sticker_action_block-id"
+	// StickerImageBlockID is the image block id
+	StickerImageBlockID = "sticker_image_block-id"
+	// StickerContextBlockID is the context block id
+	StickerContextBlockID = "sticker_context_block-id"
+
+	// ActionIDShuffleSticker shuffle sticker action ID
+	ActionIDShuffleSticker = "shuffle-sticker"
+	// ActionIDCancelSticker cancel sticker action ID
+	ActionIDCancelSticker = "cancel-sticker"
+	// ActionIDSendSticker send sticker action ID
+	ActionIDSendSticker = "send-sticker"
 
 	// MaxResults during search from cloudinary
 	MaxResults = 50

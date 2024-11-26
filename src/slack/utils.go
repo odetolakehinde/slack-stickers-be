@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -53,14 +54,14 @@ func generateSearchResultModal(imageURL, altText, tag, channelID string, indexTo
 
 	headerText := slack.NewTextBlockObject("mrkdwn", "Not what you have in mind? Switch it", false, false)
 	btnText := slack.NewTextBlockObject("plain_text", "Shuffle", false, false)
-	btn := slack.NewButtonBlockElement(model.ActionIDShuffle, fmt.Sprintf("%d", indexToReturn+1), btnText)
+	btn := slack.NewButtonBlockElement(model.ActionIDShuffleSticker, fmt.Sprintf("%d", indexToReturn+1), btnText)
 	accessory := slack.Accessory{
 		ButtonElement: btn,
 	}
 	headerSection := slack.NewSectionBlock(headerText, nil, &accessory)
 
-	//imageText := slack.NewTextBlockObject("mrkdwn", tag, false, false)
-	image := slack.NewImageBlock(imageURL, altText, "image-block-id", nil)
+	imageText := slack.NewTextBlockObject(slack.PlainTextType, tag, false, false)
+	image := slack.NewImageBlock(imageURL, altText, "image-block-id", imageText)
 
 	blocks := slack.Blocks{
 		BlockSet: []slack.Block{
@@ -80,5 +81,50 @@ func generateSearchResultModal(imageURL, altText, tag, channelID string, indexTo
 		//ClearOnClose:    false,
 		//NotifyOnClose:   false,
 		ExternalID: uuid.New().String(),
+	}
+}
+
+// createStickerPreviewBlock creates a Slack message block containing a sticker preview and action buttons (Send, Shuffle, Cancel).
+//
+// It also adjusts the sticker's index based on whether the shuffle action is triggered or not.
+func createStickerPreviewBlock(sticker model.StickerBlockActionValue, isShuffle bool) slack.Blocks {
+	if isShuffle {
+		sticker.Index++
+	} else {
+		sticker.Index = 0
+	}
+
+	jsonByte, _ := json.Marshal(sticker)
+	jsonString := string(jsonByte)
+
+	blocks := []slack.Block{
+		slack.NewImageBlock(
+			sticker.ImgURL,
+			sticker.Tag,
+			"",
+			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
+		),
+		slack.NewActionBlock(
+			model.StickerActionBlockID,
+			slack.NewButtonBlockElement(
+				model.ActionIDSendSticker,
+				jsonString,
+				slack.NewTextBlockObject(slack.PlainTextType, "Send", false, false),
+			).WithStyle(slack.StylePrimary),
+			slack.NewButtonBlockElement(
+				model.ActionIDShuffleSticker,
+				jsonString,
+				slack.NewTextBlockObject(slack.PlainTextType, "Shuffle", false, false),
+			),
+			slack.NewButtonBlockElement(
+				model.ActionIDCancelSticker,
+				"",
+				slack.NewTextBlockObject(slack.PlainTextType, "Cancel", false, false),
+			).WithStyle(slack.StyleDanger),
+		),
+	}
+
+	return slack.Blocks{
+		BlockSet: blocks,
 	}
 }

@@ -9,4 +9,6 @@ const (
 	ColorText = "#F26722"
 	// IconURL url to the icon of the slack message
 	IconURL = ""
+	// WebsiteURL is the website url
+	WebsiteURL = "slackstickers.com"
 )

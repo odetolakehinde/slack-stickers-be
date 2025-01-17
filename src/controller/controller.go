@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/media"
@@ -45,6 +46,7 @@ type Controller struct {
 
 	// third party services
 	cloudinary *media.Cloudinary
+	tenor      *media.Tenor
 	store      store.Store
 }
 
@@ -55,8 +57,11 @@ func New(z zerolog.Logger, env *environment.Env, m *middleware.Middleware, store
 	// init all storage layer under here
 	_ = store.Connect()
 
+	restyClient := resty.New()
+
 	// init all third party packages
 	cloudinary := media.NewCloudinary(z, env)
+	tenor := media.NewTenor(z, env, *restyClient)
 
 	ctrl := &Controller{
 		logger:     l,
@@ -64,7 +69,9 @@ func New(z zerolog.Logger, env *environment.Env, m *middleware.Middleware, store
 		middleware: m,
 
 		cloudinary: cloudinary,
-		store:      store,
+		tenor:      tenor,
+
+		store: store,
 	}
 
 	op := Operations(ctrl)

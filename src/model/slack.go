@@ -41,5 +41,6 @@ type (
 		Tag    string `json:"tag"`
 		Index  int    `json:"index"`
 		ImgURL string `json:"imgURL"`
+		Pos    string `json:"pos"`
 	}
 )

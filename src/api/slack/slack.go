@@ -230,9 +230,9 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			sticker.Tag = tag
 		}
 
-		err = s.controller.SearchByTag(context.Background(), i.TriggerID, i.View.CallbackID, teamID, sticker, &externalViewID)
+		err = s.controller.ShowSearchResultModal(context.Background(), i.TriggerID, i.View.CallbackID, teamID, sticker, &externalViewID)
 		if err != nil {
-			log.Err(err).Msg("controller.SearchByTag failed")
+			log.Err(err).Msg("controller.ShowSearchResultModal failed")
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}

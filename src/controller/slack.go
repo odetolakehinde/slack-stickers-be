@@ -32,9 +32,9 @@ func (c *Controller) ShowSearchModal(ctx context.Context, triggerID, channelID, 
 	return slackService.ShowSearchModal(ctx, triggerID, channelID)
 }
 
-// SearchByTag shows up the search modal
-func (c *Controller) SearchByTag(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockActionValue, externalViewID *string) error {
-	log := c.logger.With().Str(helper.LogStrKeyMethod, "SearchByTag").Logger()
+// ShowSearchResultModal shows up the search result modal
+func (c *Controller) ShowSearchResultModal(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockActionValue, externalViewID *string) error {
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "ShowSearchResultModal").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
 		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
@@ -48,7 +48,6 @@ func (c *Controller) SearchByTag(ctx context.Context, triggerID, channelID, team
 	}
 
 	totalCount := len(response.Results)
-
 	if totalCount == 0 {
 		err := fmt.Errorf("not found")
 		log.Err(err).Msg("sticker not found")
@@ -164,6 +163,11 @@ func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channel
 	}
 
 	totalCount := len(response.Results)
+	if totalCount == 0 {
+		err := fmt.Errorf("not found")
+		log.Err(err).Msg("sticker not found")
+		return err
+	}
 
 	// If the index is equal to the total count, fetch the next page of results
 	if sticker.Index == totalCount {
@@ -176,12 +180,11 @@ func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channel
 		sticker.Pos = response.Next // Set position for the next page of results
 	}
 
-	if len(response.Results) > 0 {
-		sticker.ImgURL = response.Results[sticker.Index].MediaFormats.Gif.URL
-		if err := slackService.ShuffleStickerPreview(ctx, userID, channelID, responseURL, sticker); err != nil {
-			log.Err(err).Msg("ShuffleStickerPreview failed")
-			return err
-		}
+	sticker.ImgURL = response.Results[sticker.Index].MediaFormats.Gif.URL
+
+	if err := slackService.ShuffleStickerPreview(ctx, userID, channelID, responseURL, sticker); err != nil {
+		log.Err(err).Msg("ShuffleStickerPreview failed")
+		return err
 	}
 
 	return nil

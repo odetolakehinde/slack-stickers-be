@@ -27,13 +27,15 @@ type Operations interface {
 
 	// TODO: would prob delete this
 	SendMessage(ctx context.Context, channelID, imageURL, teamID string) error
+
 	ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error
+	ShowSearchResultModal(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockActionValue, externalViewID *string) error
 
 	GetStickerSearchResult(ctx context.Context, teamID, userID, channelID, tag string) error
 	CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error
 	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
 	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
-	SearchByTag(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockActionValue, externalViewID *string) error
+
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
 }
 

@@ -123,7 +123,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				}
 
 				channelToSendSticker := i.View.CallbackID
-				sticker := model.StickerBlockActionValue{
+				sticker := model.StickerBlockMetadata{
 					Tag:    details.Title.Text,
 					ImgURL: details.ImageURL,
 				}
@@ -162,7 +162,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				for _, v := range blockActions {
 					switch v.ActionID {
 					case model.ActionIDSendSticker:
-						var sticker model.StickerBlockActionValue
+						var sticker model.StickerBlockMetadata
 						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
 							log.Err(err).Msg("json.Unmarshal failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -180,7 +180,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 						return
 
 					case model.ActionIDShuffleSticker:
-						var sticker model.StickerBlockActionValue
+						var sticker model.StickerBlockMetadata
 						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
 							log.Err(err).Msg("json.Unmarshal failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -217,7 +217,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 
 		externalViewID := i.View.ExternalID
 		teamID = i.View.TeamID
-		var sticker model.StickerBlockActionValue
+		var sticker model.StickerBlockMetadata
 		for _, v := range i.ActionCallback.BlockActions {
 			if err := json.Unmarshal([]byte(v.Value), &sticker); err != nil {
 				log.Err(err).Msg("json.Unmarshal failed")

@@ -45,7 +45,7 @@ func generateSearchModalRequest(channelID string) slack.ModalViewRequest {
 	}
 }
 
-func generateSearchResultModal(channelID string, sticker model.StickerBlockActionValue, isShuffle bool) slack.ModalViewRequest {
+func generateSearchResultModal(channelID string, sticker model.StickerBlockMetadata, isShuffle bool) slack.ModalViewRequest {
 	if isShuffle {
 		sticker.Index++
 	} else {
@@ -92,7 +92,7 @@ func generateSearchResultModal(channelID string, sticker model.StickerBlockActio
 // createStickerPreviewBlock creates a Slack message block containing a sticker preview and action buttons (Send, Shuffle, Cancel).
 //
 // It also adjusts the sticker's index based on whether the shuffle action is triggered or not.
-func createStickerPreviewBlock(sticker model.StickerBlockActionValue, isShuffle bool) slack.Blocks {
+func createStickerPreviewBlock(sticker model.StickerBlockMetadata, isShuffle bool) slack.Blocks {
 	if isShuffle {
 		sticker.Index++
 	} else {

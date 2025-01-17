@@ -33,7 +33,7 @@ func (c *Controller) ShowSearchModal(ctx context.Context, triggerID, channelID, 
 }
 
 // ShowSearchResultModal shows up the search result modal
-func (c *Controller) ShowSearchResultModal(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockActionValue, externalViewID *string) error {
+func (c *Controller) ShowSearchResultModal(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockMetadata, externalViewID *string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "ShowSearchResultModal").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -135,7 +135,7 @@ func (c *Controller) CancelSticker(ctx context.Context, teamID, channelID, respo
 }
 
 // SendSticker to send sticker
-func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendSticker").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -148,7 +148,7 @@ func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID,
 }
 
 // ShuffleSticker to shuffle sticker
-func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "ShuffleSticker").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {

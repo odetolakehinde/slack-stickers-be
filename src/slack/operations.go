@@ -86,7 +86,7 @@ func (p *Provider) ShowSearchModal(_ context.Context, triggerID, channelID strin
 }
 
 // ShowSearchResultModal triggers the modal to show the user the search result
-func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID string, sticker model.StickerBlockActionValue, externalViewID *string) error {
+func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID string, sticker model.StickerBlockMetadata, externalViewID *string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowSearchResultModal").Logger()
 	var err error
 
@@ -111,7 +111,7 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID
 // ShowStickerPreview sends a sticker preview to the specified user as an ephemeral message in the Slack channel
 func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowStickerPreview").Logger()
-	sticker := model.StickerBlockActionValue{
+	sticker := model.StickerBlockMetadata{
 		Tag:    tag,
 		Index:  0,
 		ImgURL: imageURL,
@@ -134,7 +134,7 @@ func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag,
 
 // ShuffleStickerPreview updates the sticker preview by replacing the original ephemeral message with a new one
 // containing a shuffled sticker, updating the displayed image based on the tag and index.
-func (p *Provider) ShuffleStickerPreview(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+func (p *Provider) ShuffleStickerPreview(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShuffleStickerPreview").Logger()
 
 	block := createStickerPreviewBlock(sticker, true)
@@ -170,7 +170,7 @@ func (p *Provider) CancelStickerPreview(_ context.Context, channelID, responseUR
 }
 
 // SendStickerToChannel sends the specified sticker to the Slack channel as a permanent message,
-func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error {
+func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
 
 	contextElements := []slack.MixedElement{

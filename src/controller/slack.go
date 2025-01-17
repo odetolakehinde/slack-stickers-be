@@ -97,19 +97,19 @@ func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, team
 		return err
 	}
 
-	result, totalCount, err := c.cloudinary.SearchByTag(ctx, text)
+	response, err := c.tenor.SearchGifsByQuery(ctx, text, "")
 	if err != nil {
-		log.Err(err).Msg("cloudinary.SearchByTag failed")
+		log.Err(err).Msg("tenor.SearchGifsByQuery failed")
 		return err
 	}
 
-	if len(result) == 0 || totalCount < 1 {
+	if len(response.Results) == 0 {
 		err := fmt.Errorf("not found")
 		log.Err(err).Msg("sticker not found")
 		return err
 	}
 
-	imageURL := result[0].URL
+	imageURL := response.Results[0].MediaFormats.Gif.URL
 
 	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL)
 }
@@ -148,20 +148,29 @@ func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channel
 		return err
 	}
 
-	result, totalCount, err := c.cloudinary.SearchByTag(ctx, sticker.Tag)
+	response, err := c.tenor.SearchGifsByQuery(ctx, sticker.Tag, sticker.Pos)
 	if err != nil {
-		log.Err(err).Msg("cloudinary.SearchByTag failed")
+		log.Err(err).Msg("tenor.SearchGifsByQuery failed")
 		return err
 	}
 
-	if sticker.Index >= totalCount {
-		sticker.Index = 0
+	totalCount := len(response.Results)
+
+	// If the index is equal to the total count, fetch the next page of results
+	if sticker.Index == totalCount {
+		response, err = c.tenor.SearchGifsByQuery(ctx, sticker.Tag, response.Next)
+		if err != nil {
+			log.Err(err).Msg("tenor.SearchGifsByQuery failed when index is == totalCount")
+			return err
+		}
+		sticker.Index = 0           // reset index to 0
+		sticker.Pos = response.Next // Set position for the next page of results
 	}
 
-	if len(result) > 0 {
-		sticker.ImgURL = result[sticker.Index].URL
+	if len(response.Results) > 0 {
+		sticker.ImgURL = response.Results[sticker.Index].MediaFormats.Gif.URL
 		if err := slackService.ShuffleStickerPreview(ctx, userID, channelID, responseURL, sticker); err != nil {
-			log.Err(err).Msg("ShuffleSticker Preview Failed")
+			log.Err(err).Msg("ShuffleStickerPreview failed")
 			return err
 		}
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
@@ -34,7 +33,7 @@ func (c *Controller) ShowSearchModal(ctx context.Context, triggerID, channelID, 
 }
 
 // SearchByTag shows up the search modal
-func (c *Controller) SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error {
+func (c *Controller) SearchByTag(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockActionValue, externalViewID *string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SearchByTag").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -42,27 +41,37 @@ func (c *Controller) SearchByTag(ctx context.Context, triggerID, tag, countToRet
 		return err
 	}
 
-	result, totalCount, err := c.cloudinary.SearchByTag(ctx, tag)
+	response, err := c.tenor.SearchGifsByQuery(ctx, sticker.Tag, sticker.Pos)
 	if err != nil {
-		log.Err(err).Msg("cloudinary.SearchByTag failed")
+		log.Err(err).Msg("tenor.SearchGifsByQuery failed")
 		return err
 	}
 
-	indexToReturn, _ := strconv.Atoi(countToReturn)
+	totalCount := len(response.Results)
 
-	if indexToReturn >= totalCount {
-		// we are at the last one, go back to zero
-		indexToReturn = 0
+	if totalCount == 0 {
+		err := fmt.Errorf("not found")
+		log.Err(err).Msg("sticker not found")
+		return err
 	}
 
-	// for now, send the first result
-	if len(result) > 0 {
-		response := result[indexToReturn]
-		err = slackService.ShowSearchResultModal(ctx, triggerID, response.URL, response.Name, tag, channelID, externalViewID, indexToReturn)
+	// If the index is equal to the total count, fetch the next page of results
+	if sticker.Index == totalCount {
+		response, err = c.tenor.SearchGifsByQuery(ctx, sticker.Tag, sticker.Pos)
 		if err != nil {
-			log.Err(err).Msg("slackService.ShowSearchResultModal failed")
+			log.Err(err).Msg("tenor.SearchGifsByQuery failed when index is == totalCount")
 			return err
 		}
+		sticker.Index = 0           // reset index to 0
+		sticker.Pos = response.Next // Set position for the next page of results
+	}
+
+	sticker.ImgURL = response.Results[sticker.Index].MediaFormats.Gif.URL
+
+	err = slackService.ShowSearchResultModal(ctx, triggerID, channelID, sticker, externalViewID)
+	if err != nil {
+		log.Err(err).Msg("slackService.ShowSearchResultModal failed")
+		return err
 	}
 
 	return nil

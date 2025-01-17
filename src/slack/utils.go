@@ -2,7 +2,6 @@ package slack
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/slack-go/slack"
@@ -46,22 +45,30 @@ func generateSearchModalRequest(channelID string) slack.ModalViewRequest {
 	}
 }
 
-func generateSearchResultModal(imageURL, altText, tag, channelID string, indexToReturn int) slack.ModalViewRequest {
-	// Create a ModalViewRequest with a header and two inputs
+func generateSearchResultModal(channelID string, sticker model.StickerBlockActionValue, isShuffle bool) slack.ModalViewRequest {
+	if isShuffle {
+		sticker.Index++
+	} else {
+		sticker.Index = 0
+	}
+
+	jsonByte, _ := json.Marshal(sticker)
+	jsonString := string(jsonByte)
+
 	titleText := slack.NewTextBlockObject("plain_text", "Slack Stickers ", false, false)
 	closeText := slack.NewTextBlockObject("plain_text", "Close", false, false)
 	submitText := slack.NewTextBlockObject("plain_text", "Send Sticker", false, false)
-
 	headerText := slack.NewTextBlockObject("mrkdwn", "Not what you have in mind? Switch it", false, false)
 	btnText := slack.NewTextBlockObject("plain_text", "Shuffle", false, false)
-	btn := slack.NewButtonBlockElement(model.ActionIDShuffleSticker, fmt.Sprintf("%d", indexToReturn+1), btnText)
+
+	btn := slack.NewButtonBlockElement(model.ActionIDShuffleSticker, jsonString, btnText)
 	accessory := slack.Accessory{
 		ButtonElement: btn,
 	}
 	headerSection := slack.NewSectionBlock(headerText, nil, &accessory)
 
-	imageText := slack.NewTextBlockObject(slack.PlainTextType, tag, false, false)
-	image := slack.NewImageBlock(imageURL, altText, "image-block-id", imageText)
+	imageText := slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false)
+	image := slack.NewImageBlock(sticker.ImgURL, sticker.Tag, "image-block-id", imageText)
 
 	blocks := slack.Blocks{
 		BlockSet: []slack.Block{
@@ -76,11 +83,9 @@ func generateSearchResultModal(imageURL, altText, tag, channelID string, indexTo
 		Blocks:          blocks,
 		Close:           closeText,
 		Submit:          submitText,
-		PrivateMetadata: tag,
+		PrivateMetadata: sticker.Tag,
 		CallbackID:      channelID, // we are using the channel ID for this
-		// ClearOnClose:    false,
-		// NotifyOnClose:   false,
-		ExternalID: uuid.New().String(),
+		ExternalID:      uuid.New().String(),
 	}
 }
 

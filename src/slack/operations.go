@@ -86,21 +86,19 @@ func (p *Provider) ShowSearchModal(_ context.Context, triggerID, channelID strin
 }
 
 // ShowSearchResultModal triggers the modal to show the user the search result
-func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, imageURL, altText, searchString, channelID string,
-	externalViewID *string, indexToReturn int,
-) error {
+func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID string, sticker model.StickerBlockActionValue, externalViewID *string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowSearchResultModal").Logger()
 	var err error
 
-	modalRequest := generateSearchResultModal(imageURL, altText, searchString, channelID, indexToReturn)
 	if externalViewID == nil {
-		// we are doing this afresh
+		modalRequest := generateSearchResultModal(channelID, sticker, false)
 		if _, err = p.client.OpenView(triggerID, modalRequest); err != nil {
 			log.Err(err).Msg("OpenView failed")
 			return err
 		}
 	} else {
 		// let us replace what the guy sees on the screen
+		modalRequest := generateSearchResultModal(channelID, sticker, true)
 		if _, err = p.client.UpdateView(modalRequest, *externalViewID, "", ""); err != nil {
 			log.Err(err).Msg("UpdateView failed")
 			return err

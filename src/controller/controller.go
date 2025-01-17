@@ -33,8 +33,7 @@ type Operations interface {
 	CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error
 	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
 	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
-
-	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error
+	SearchByTag(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockActionValue, externalViewID *string) error
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
 }
 

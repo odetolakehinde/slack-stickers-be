@@ -85,9 +85,8 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		}
 
 		var (
-			i             slack.InteractionCallback
-			tag           string
-			indexToReturn = "0"
+			i   slack.InteractionCallback
+			tag string
 		)
 		err = json.Unmarshal([]byte(parsedBody["payload"][0]), &i)
 		if err != nil {
@@ -124,7 +123,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				}
 
 				channelToSendSticker := i.View.CallbackID
-				sticker := model.StickerBlockActionValue{
+				sticker := model.StickerBlockMetadata{
 					Tag:    details.Title.Text,
 					ImgURL: details.ImageURL,
 				}
@@ -163,7 +162,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				for _, v := range blockActions {
 					switch v.ActionID {
 					case model.ActionIDSendSticker:
-						var sticker model.StickerBlockActionValue
+						var sticker model.StickerBlockMetadata
 						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
 							log.Err(err).Msg("json.Unmarshal failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -181,7 +180,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 						return
 
 					case model.ActionIDShuffleSticker:
-						var sticker model.StickerBlockActionValue
+						var sticker model.StickerBlockMetadata
 						if err := json.Unmarshal([]byte(blockValue), &sticker); err != nil {
 							log.Err(err).Msg("json.Unmarshal failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -207,7 +206,6 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					}
 				}
 			} else {
-				indexToReturn = i.ActionCallback.BlockActions[0].Value
 				tag = i.View.PrivateMetadata
 			}
 
@@ -219,9 +217,22 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 
 		externalViewID := i.View.ExternalID
 		teamID = i.View.TeamID
-		err = s.controller.SearchByTag(context.Background(), i.TriggerID, tag, indexToReturn, i.View.CallbackID, teamID, &externalViewID)
+		var sticker model.StickerBlockMetadata
+		for _, v := range i.ActionCallback.BlockActions {
+			if err := json.Unmarshal([]byte(v.Value), &sticker); err != nil {
+				log.Err(err).Msg("json.Unmarshal failed")
+				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+				return
+			}
+		}
+
+		if sticker.Tag == "" {
+			sticker.Tag = tag
+		}
+
+		err = s.controller.ShowSearchResultModal(context.Background(), i.TriggerID, i.View.CallbackID, teamID, sticker, &externalViewID)
 		if err != nil {
-			log.Err(err).Msg("controller.SearchByTag failed")
+			log.Err(err).Msg("controller.ShowSearchResultModal failed")
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}

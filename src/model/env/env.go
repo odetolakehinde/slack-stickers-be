@@ -29,4 +29,7 @@ const (
 	SlackToken = "SLACK_TOKEN"
 	// SlackAppToken for app level token
 	SlackAppToken = "SLACK_APP_TOKEN"
+
+	// TenorAPIKey is tenor api key
+	TenorAPIKey = "TENOR_API_KEY"
 )

@@ -36,10 +36,11 @@ type (
 		IsEnterpriseInstall bool        `json:"is_enterprise_install"`
 	}
 
-	// StickerBlockActionValue is the payload passed as the sticker action value
-	StickerBlockActionValue struct {
+	// StickerBlockMetadata is a sticker block metadata
+	StickerBlockMetadata struct {
 		Tag    string `json:"tag"`
 		Index  int    `json:"index"`
 		ImgURL string `json:"imgURL"`
+		Pos    string `json:"pos"`
 	}
 )

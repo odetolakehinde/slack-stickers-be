@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
 
 	"github.com/odetolakehinde/slack-stickers-be/src/media"
@@ -26,14 +27,15 @@ type Operations interface {
 
 	// TODO: would prob delete this
 	SendMessage(ctx context.Context, channelID, imageURL, teamID string) error
+
 	ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error
+	ShowSearchResultModal(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockMetadata, externalViewID *string) error
 
 	GetStickerSearchResult(ctx context.Context, teamID, userID, channelID, tag string) error
 	CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error
-	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
-	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockActionValue) error
+	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
+	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
 
-	SearchByTag(ctx context.Context, triggerID, tag, countToReturn, channelID, teamID string, externalViewID *string) error
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
 }
 
@@ -45,6 +47,7 @@ type Controller struct {
 
 	// third party services
 	cloudinary *media.Cloudinary
+	tenor      *media.Tenor
 	store      store.Store
 }
 
@@ -55,8 +58,11 @@ func New(z zerolog.Logger, env *environment.Env, m *middleware.Middleware, store
 	// init all storage layer under here
 	_ = store.Connect()
 
+	restyClient := resty.New()
+
 	// init all third party packages
 	cloudinary := media.NewCloudinary(z, env)
+	tenor := media.NewTenor(z, env, *restyClient)
 
 	ctrl := &Controller{
 		logger:     l,
@@ -64,7 +70,9 @@ func New(z zerolog.Logger, env *environment.Env, m *middleware.Middleware, store
 		middleware: m,
 
 		cloudinary: cloudinary,
-		store:      store,
+		tenor:      tenor,
+
+		store: store,
 	}
 
 	op := Operations(ctrl)

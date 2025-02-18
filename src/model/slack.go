@@ -38,9 +38,10 @@ type (
 
 	// StickerBlockMetadata is a sticker block metadata
 	StickerBlockMetadata struct {
-		Tag    string `json:"tag"`
-		Index  int    `json:"index"`
-		ImgURL string `json:"imgURL"`
-		Pos    string `json:"pos"`
+		Tag      string  `json:"tag"`
+		Index    int     `json:"index"`
+		ImgURL   string  `json:"imgURL"`
+		Pos      string  `json:"pos"`
+		ThreadTS *string `json:"threadTS"`
 	}
 )

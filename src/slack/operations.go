@@ -109,22 +109,28 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID
 }
 
 // ShowStickerPreview sends a sticker preview to the specified user as an ephemeral message in the Slack channel
-func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string) error {
+func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string, threadTS *string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowStickerPreview").Logger()
 	sticker := model.StickerBlockMetadata{
-		Tag:    tag,
-		Index:  0,
-		ImgURL: imageURL,
+		Tag:      tag,
+		Index:    0,
+		ImgURL:   imageURL,
+		ThreadTS: threadTS,
 	}
 
 	blocks := createStickerPreviewBlock(sticker, true)
 
-	_, _, err := p.client.PostMessage(
-		channelID,
+	msgOptions := []slack.MsgOption{
 		slack.MsgOptionPostEphemeral(userID),
 		slack.MsgOptionBlocks(blocks.BlockSet...),
-	)
-	if err != nil {
+	}
+
+	// If threadTs is not nil, include it in the message options
+	if sticker.ThreadTS != nil {
+		msgOptions = append(msgOptions, slack.MsgOptionTS(*sticker.ThreadTS))
+	}
+
+	if _, _, err := p.client.PostMessage(channelID, msgOptions...); err != nil {
 		log.Err(err).Msg("PostMessage failed")
 		return err
 	}
@@ -137,16 +143,28 @@ func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag,
 func (p *Provider) ShuffleStickerPreview(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShuffleStickerPreview").Logger()
 
+	fmt.Println("response url is", responseURL)
+	fmt.Println("thread tis is", *sticker.ThreadTS)
+
+	// Create new blocks for the sticker preview
 	block := createStickerPreviewBlock(sticker, true)
 
-	_, _, err := p.client.PostMessage(
-		channelID,
-		slack.MsgOptionAsUser(true),
+	// Set up the options for the message
+	msgOptions := []slack.MsgOption{
 		slack.MsgOptionPostEphemeral(userID),
-		slack.MsgOptionReplaceOriginal(responseURL),
 		slack.MsgOptionBlocks(block.BlockSet...),
-	)
-	if err != nil {
+		slack.MsgOptionReplaceOriginal(responseURL), // Ensure it replaces the original ephemeral message
+	}
+
+	// If threadTs is provided, post to thread
+	if sticker.ThreadTS != nil {
+		msgOptions = append(msgOptions, slack.MsgOptionTS(*sticker.ThreadTS))
+	}
+
+	msgOptions = append(msgOptions, slack.MsgOptionDisableMediaUnfurl())
+	msgOptions = append(msgOptions, slack.MsgOptionDisableLinkUnfurl())
+
+	if _, _, err := p.client.PostMessage(channelID, msgOptions...); err != nil {
 		log.Err(err).Msg("PostMessage failed")
 		return err
 	}
@@ -195,10 +213,20 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 		),
 	}
 
-	_, timestamp, err := p.client.PostMessage(
-		channelID,
+	msgOptions := []slack.MsgOption{
 		slack.MsgOptionAsUser(true),
 		slack.MsgOptionBlocks(blocks...),
+	}
+
+	// If threadTs is not nil, include it in the message options
+	if sticker.ThreadTS != nil {
+		msgOptions = append(msgOptions, slack.MsgOptionTS(*sticker.ThreadTS))
+	}
+
+	// send sticker
+	_, timestamp, err := p.client.PostMessage(
+		channelID,
+		msgOptions...,
 	)
 	if err != nil {
 		log.Err(err).Msg("PostMessage failed to send sticker")

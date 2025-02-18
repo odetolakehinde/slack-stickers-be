@@ -4,9 +4,12 @@ package media
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -43,6 +46,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 	slackGroup.POST("/interactivity", slack.interactivityUsed())
 	slackGroup.POST("/slash-command", slack.slashCommandUsed())
 	slackGroup.POST("/auth", slack.saveAuthDetails())
+	slackGroup.POST("/events", slack.eventListener())
 }
 
 // sendMessage handles authentication for users
@@ -280,7 +284,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 				return
 			}
 		} else {
-			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text); err != nil {
+			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil); err != nil {
 				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 				c.String(http.StatusBadRequest, err.Error())
 				return
@@ -323,5 +327,63 @@ func (s *slackHandler) saveAuthDetails() gin.HandlerFunc {
 
 		log.Info().Interface(helper.LogStrResponseLevel, true).Msg("response returned")
 		restModel.OkResponse(c, http.StatusOK, "Details saved successfully", true)
+	}
+}
+
+func (s *slackHandler) eventListener() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestID := requestid.Get(c)
+		log := s.logger.With().
+			Str(helper.LogEndpointLevel, c.FullPath()).
+			Str(helper.LogStrRequestIDLevel, requestID).
+			Logger()
+
+		var req restModel.SlackEventCallback
+
+		requestBody, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			log.Err(err).Msg("io.ReadAll failed")
+			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if err := json.Unmarshal(requestBody, &req); err != nil {
+			log.Err(err).Msg("json.Unmarshal failed")
+			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if req.Type == "url_verification" {
+			c.JSON(http.StatusOK, gin.H{"challenge": req.Challenge})
+			return
+		}
+
+		if req.Event.Type == "app_mention" {
+			// Example message text -> "<@U0LAN0Z89> blah blah"
+			// regexp to match mentions in the format <@USER_ID>
+			re := regexp.MustCompile(`<@([A-Za-z0-9]+)>`)
+
+			// replace all mentions with an empty string
+			textWithoutMention := re.ReplaceAllString(req.Event.Text, "")
+
+			// Optionally, trim any extra spaces that might be left
+			textWithoutMention = strings.TrimSpace(textWithoutMention)
+
+			fmt.Println(textWithoutMention)
+
+			fmt.Printf("%+v\n", req)
+
+			channelID := req.Event.Channel
+			teamID := req.TeamID
+			userID := req.Event.User
+			fmt.Println("threadTs", req.Event.ThreadTS)
+			if err = s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS); err != nil {
+				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
+				c.String(http.StatusBadRequest, err.Error())
+				return
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{"status": "event received"})
 	}
 }

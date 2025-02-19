@@ -36,4 +36,11 @@ const (
 
 	// ModalViewType for modal view type
 	ModalViewType = "modal"
+
+	// EventTypeAppMention for when the bot is mentioned
+	EventTypeAppMention = "app_mention"
+
+	// SlackCallbackEventURLVerification for verifying the url for event listener handler
+	// https://api.slack.com/events/url_verification
+	SlackCallbackEventURLVerification = "url_verification"
 )

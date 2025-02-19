@@ -4,7 +4,6 @@ package media
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -369,14 +368,10 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			// Optionally, trim any extra spaces that might be left
 			textWithoutMention = strings.TrimSpace(textWithoutMention)
 
-			fmt.Println(textWithoutMention)
-
-			fmt.Printf("%+v\n", req)
-
 			channelID := req.Event.Channel
 			teamID := req.TeamID
 			userID := req.Event.User
-			fmt.Println("threadTs", req.Event.ThreadTS)
+
 			if err = s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS); err != nil {
 				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 				c.String(http.StatusBadRequest, err.Error())

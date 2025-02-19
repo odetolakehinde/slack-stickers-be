@@ -352,12 +352,12 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			return
 		}
 
-		if req.Type == "url_verification" {
+		if req.Type == model.SlackCallbackEventURLVerification {
 			c.JSON(http.StatusOK, gin.H{"challenge": req.Challenge})
 			return
 		}
 
-		if req.Event.Type == "app_mention" {
+		if req.Event.Type == model.EventTypeAppMention {
 			// Example message text -> "<@U0LAN0Z89> blah blah"
 			// regexp to match mentions in the format <@USER_ID>
 			re := regexp.MustCompile(`<@([A-Za-z0-9]+)>`)

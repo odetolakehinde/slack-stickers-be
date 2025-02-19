@@ -368,14 +368,24 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			// Optionally, trim any extra spaces that might be left
 			textWithoutMention = strings.TrimSpace(textWithoutMention)
 
-			channelID := req.Event.Channel
-			teamID := req.TeamID
-			userID := req.Event.User
+			// Check if the text starts with one of the command prefixes
+			prefixes := []string{"search", "find", "gif", "g"}
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(textWithoutMention, prefix) {
+					// Remove the prefix and any leading spaces
+					textWithoutMention = strings.TrimSpace(strings.TrimPrefix(textWithoutMention, prefix))
 
-			if err = s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS); err != nil {
-				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
-				c.String(http.StatusBadRequest, err.Error())
-				return
+					channelID := req.Event.Channel
+					teamID := req.TeamID
+					userID := req.Event.User
+
+					if err := s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS); err != nil {
+						log.Err(err).Msg("controller.GetStickerSearchResult failed.")
+						c.String(http.StatusBadRequest, err.Error())
+						return
+					}
+					break
+				}
 			}
 		}
 

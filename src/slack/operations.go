@@ -143,9 +143,6 @@ func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag,
 func (p *Provider) ShuffleStickerPreview(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShuffleStickerPreview").Logger()
 
-	fmt.Println("response url is", responseURL)
-	fmt.Println("thread tis is", *sticker.ThreadTS)
-
 	// Create new blocks for the sticker preview
 	block := createStickerPreviewBlock(sticker, true)
 

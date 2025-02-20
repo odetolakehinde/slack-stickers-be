@@ -97,7 +97,7 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 }
 
 // GetStickerSearchResult shows up the search result
-func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string, threadTS *string) error {
+func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string, threadTS, mentionTS *string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "GetStickerSearchResult").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -119,7 +119,7 @@ func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, team
 
 	imageURL := response.Results[0].MediaFormats.Gif.URL
 
-	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL, threadTS)
+	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL, threadTS, mentionTS)
 }
 
 // CancelSticker to close sticker preview block

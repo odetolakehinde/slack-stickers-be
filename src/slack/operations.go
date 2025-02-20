@@ -108,9 +108,21 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID
 	return nil
 }
 
-// ShowStickerPreview sends a sticker preview to the specified user as an ephemeral message in the Slack channel
-func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string, threadTS *string) error {
+// ShowStickerPreview sends a sticker preview message to the specified channel.
+// It optionally deletes a previously mentioned message if the bot was mentioned.
+//
+//   - threadTS: The timestamp of a message in the thread where the preview is posted, if any.
+//   - mentionTS: The timestamp of the message to be deleted. This is only valid if the bot was mentioned.
+func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string, threadTS, mentionTS *string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowStickerPreview").Logger()
+
+	// delete original message if bot was mentioned to search for gif
+	if mentionTS != nil {
+		if _, _, err := p.client.DeleteMessage(channelID, *mentionTS); err != nil {
+			log.Err(err).Msg("DeleteMessage failed")
+		}
+	}
+
 	sticker := model.StickerBlockMetadata{
 		Tag:      tag,
 		Index:    0,

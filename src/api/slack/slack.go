@@ -283,7 +283,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 				return
 			}
 		} else {
-			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil); err != nil {
+			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil, nil); err != nil {
 				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 				c.String(http.StatusBadRequest, err.Error())
 				return
@@ -379,7 +379,7 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 					teamID := req.TeamID
 					userID := req.Event.User
 
-					if err := s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS); err != nil {
+					if err := s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS, &req.Event.Timestamp); err != nil {
 						log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 						c.String(http.StatusBadRequest, err.Error())
 						return

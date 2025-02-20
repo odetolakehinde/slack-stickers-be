@@ -131,7 +131,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					ImgURL: details.ImageURL,
 				}
 
-				err = s.controller.SendSticker(context.Background(), teamID, userID, channelToSendSticker, responseURL, sticker)
+				err = s.controller.SendSticker(context.Background(), teamID, channelToSendSticker, responseURL, sticker)
 				if err != nil {
 					log.Err(err).Msg("controller.SendSticker failed")
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -172,7 +172,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 							return
 						}
 
-						err = s.controller.SendSticker(context.Background(), teamID, userID, channelID, responseURL, sticker)
+						err = s.controller.SendSticker(context.Background(), teamID, channelID, responseURL, sticker)
 						if err != nil {
 							log.Err(err).Msg("controller.SendSticker failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())

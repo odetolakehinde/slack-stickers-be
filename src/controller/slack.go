@@ -135,7 +135,7 @@ func (c *Controller) CancelSticker(ctx context.Context, teamID, channelID, respo
 }
 
 // SendSticker to send sticker
-func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
+func (c *Controller) SendSticker(ctx context.Context, teamID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendSticker").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -144,7 +144,7 @@ func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID,
 	}
 
 	log.Info().Str("channelID", channelID).Msg("sending sticker")
-	return slackService.SendStickerToChannel(ctx, userID, channelID, responseURL, sticker)
+	return slackService.SendStickerToChannel(ctx, channelID, responseURL, sticker)
 }
 
 // ShuffleSticker to shuffle sticker

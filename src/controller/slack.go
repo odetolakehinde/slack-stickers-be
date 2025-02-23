@@ -97,7 +97,7 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 }
 
 // GetStickerSearchResult shows up the search result
-func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string, threadTS *string) error {
+func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string, threadTS, mentionTS *string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "GetStickerSearchResult").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -119,7 +119,7 @@ func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, team
 
 	imageURL := response.Results[0].MediaFormats.Gif.URL
 
-	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL, threadTS)
+	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL, threadTS, mentionTS)
 }
 
 // CancelSticker to close sticker preview block
@@ -135,7 +135,7 @@ func (c *Controller) CancelSticker(ctx context.Context, teamID, channelID, respo
 }
 
 // SendSticker to send sticker
-func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
+func (c *Controller) SendSticker(ctx context.Context, teamID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendSticker").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -144,7 +144,7 @@ func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID,
 	}
 
 	log.Info().Str("channelID", channelID).Msg("sending sticker")
-	return slackService.SendStickerToChannel(ctx, userID, channelID, responseURL, sticker)
+	return slackService.SendStickerToChannel(ctx, channelID, responseURL, sticker)
 }
 
 // ShuffleSticker to shuffle sticker

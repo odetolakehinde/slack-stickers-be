@@ -49,6 +49,7 @@ func (t *Tenor) SearchGifsByQuery(ctx context.Context, query string, pos string)
 		"random":       "true",
 		"q":            query,
 		"pos":          pos,
+		"locale":       "en_NG",
 	}).Get("https://tenor.googleapis.com/v2/search")
 
 	if err != nil || resp.StatusCode() != 200 {

@@ -131,7 +131,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					ImgURL: details.ImageURL,
 				}
 
-				err = s.controller.SendSticker(context.Background(), teamID, userID, channelToSendSticker, responseURL, sticker)
+				err = s.controller.SendSticker(context.Background(), teamID, channelToSendSticker, responseURL, sticker)
 				if err != nil {
 					log.Err(err).Msg("controller.SendSticker failed")
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -172,7 +172,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 							return
 						}
 
-						err = s.controller.SendSticker(context.Background(), teamID, userID, channelID, responseURL, sticker)
+						err = s.controller.SendSticker(context.Background(), teamID, channelID, responseURL, sticker)
 						if err != nil {
 							log.Err(err).Msg("controller.SendSticker failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -283,7 +283,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 				return
 			}
 		} else {
-			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil); err != nil {
+			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil, nil); err != nil {
 				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 				c.String(http.StatusBadRequest, err.Error())
 				return
@@ -379,7 +379,7 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 					teamID := req.TeamID
 					userID := req.Event.User
 
-					if err := s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS); err != nil {
+					if err := s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS, &req.Event.Timestamp); err != nil {
 						log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 						c.String(http.StatusBadRequest, err.Error())
 						return

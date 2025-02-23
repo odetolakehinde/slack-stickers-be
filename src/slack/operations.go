@@ -202,7 +202,7 @@ func (p *Provider) SendStickerToChannel(_ context.Context, channelID, responseUR
 
 	contextElements := []slack.MixedElement{
 		slack.NewTextBlockObject(slack.MarkdownType, FooterText, false, false),
-		slack.NewImageBlockElement("https://auth.slackstickers.com/img/favicon.81c8692c.svg", "slack stickers logo"),
+		slack.NewImageBlockElement("https://res.cloudinary.com/slackstickers/image/upload/v1740350898/Slack%20Stickers/slackstickers-logo.svg", "slack stickers logo"),
 	}
 
 	blocks := []slack.Block{

@@ -352,6 +352,8 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			return
 		}
 
+		log.Info().Interface("SlackEventCallback", req).Msg("event listener")
+
 		if req.Type == model.SlackCallbackEventURLVerification {
 			c.JSON(http.StatusOK, gin.H{"challenge": req.Challenge})
 			return

@@ -352,8 +352,6 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			return
 		}
 
-		log.Info().Interface("SlackEventCallback", req).Msg("event listener")
-
 		if req.Type == model.SlackCallbackEventURLVerification {
 			c.JSON(http.StatusOK, gin.H{"challenge": req.Challenge})
 			return
@@ -388,6 +386,15 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 					}
 					break
 				}
+			}
+		}
+
+		// if app is uninstalled or token is revoked
+		if req.Event.Type == model.EventTypeTokensRevoked || req.Event.Type == model.EventTypeAppUninstalled {
+			if err := s.controller.RemoveAuthDetails(context.Background(), req.TeamID); err != nil {
+				log.Err(err).Msg("RemoveAuthDetails failed")
+				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+				return
 			}
 		}
 

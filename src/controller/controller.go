@@ -37,6 +37,7 @@ type Operations interface {
 	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
 
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
+	RemoveAuthDetails(ctx context.Context, teamID string) error
 }
 
 // Controller object to hold necessary reference to other dependencies
@@ -104,6 +105,11 @@ func (c *Controller) getSlackService(ctx context.Context, teamID string) (slack.
 		return slack.Provider{}, err
 	}
 
-	s := slack.New(c.logger, c.env, authDetails.AccessToken)
+	accessToken := authDetails.AccessToken
+	if authDetails.AuthedUser.AccessToken != "" {
+		accessToken = authDetails.AuthedUser.AccessToken
+	}
+
+	s := slack.New(c.logger, c.env, accessToken)
 	return *s, nil
 }

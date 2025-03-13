@@ -37,6 +37,7 @@ type Operations interface {
 	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
 
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
+	RemoveAuthDetails(ctx context.Context, teamID string) error
 }
 
 // Controller object to hold necessary reference to other dependencies

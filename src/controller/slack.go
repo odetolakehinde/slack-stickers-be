@@ -76,7 +76,7 @@ func (c *Controller) ShowSearchResultModal(ctx context.Context, triggerID, chann
 	return nil
 }
 
-// SaveAuthDetails handles function to safe the authorization details to redis
+// SaveAuthDetails handles function to save the authorization details to redis
 func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SaveAuthDetails").Logger()
 
@@ -90,6 +90,18 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 	err = c.store.SetValue(ctx, authDetails.Team.ID, string(bytes), 0)
 	if err != nil {
 		log.Err(err).Msg("store.SetValue failed")
+		return err
+	}
+
+	return nil
+}
+
+// RemoveAuthDetails deletes the auth details from redis
+func (c *Controller) RemoveAuthDetails(ctx context.Context, teamID string) error {
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "RemoveAuthDetails").Logger()
+
+	if err := c.store.DeleteValue(ctx, teamID); err != nil {
+		log.Err(err).Msg("store.DeleteValue failed")
 		return err
 	}
 

@@ -391,6 +391,15 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			}
 		}
 
+		// if app is uninstalled or token is revoked
+		if req.Event.Type == model.EventTypeTokensRevoked || req.Event.Type == model.EventTypeAppUninstalled {
+			if err := s.controller.RemoveAuthDetails(context.Background(), req.TeamID); err != nil {
+				log.Err(err).Msg("RemoveAuthDetails failed")
+				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+				return
+			}
+		}
+
 		c.JSON(http.StatusOK, gin.H{"status": "event received"})
 	}
 }

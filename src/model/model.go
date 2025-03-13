@@ -40,6 +40,12 @@ const (
 	// EventTypeAppMention for when the bot is mentioned
 	EventTypeAppMention = "app_mention"
 
+	// EventTypeAppUninstalled for when the bot is uninstalled/removed from a workspace
+	EventTypeAppUninstalled = "app_uninstalled"
+
+	// EventTypeTokensRevoked for when the bot token is revoked
+	EventTypeTokensRevoked = "tokens_revoked"
+
 	// SlackCallbackEventURLVerification for verifying the url for event listener handler
 	// https://api.slack.com/events/url_verification
 	SlackCallbackEventURLVerification = "url_verification"

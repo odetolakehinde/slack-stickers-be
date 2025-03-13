@@ -105,6 +105,11 @@ func (c *Controller) getSlackService(ctx context.Context, teamID string) (slack.
 		return slack.Provider{}, err
 	}
 
-	s := slack.New(c.logger, c.env, authDetails.AccessToken)
+	accessToken := authDetails.AccessToken
+	if authDetails.AuthedUser.AccessToken != "" {
+		accessToken = authDetails.AuthedUser.AccessToken
+	}
+
+	s := slack.New(c.logger, c.env, accessToken)
 	return *s, nil
 }

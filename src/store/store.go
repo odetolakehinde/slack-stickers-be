@@ -15,6 +15,7 @@ type Store interface {
 	GetStringValue(ctx context.Context, key string) (string, error)
 	SetValue(ctx context.Context, key string, value interface{}, ttl time.Duration) error
 	DeleteValue(ctx context.Context, key string) error
+	ScanKeys(ctx context.Context, pattern string, count int64) ([]string, error)
 	Connect() error
 }
 

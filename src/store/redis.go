@@ -129,3 +129,24 @@ func (r *Redis) DeleteValue(ctx context.Context, key string) error {
 	}
 	return nil
 }
+
+// ScanKeys retrieves all keys matching a pattern
+func (r *Redis) ScanKeys(ctx context.Context, pattern string, count int64) ([]string, error) {
+	if r.connectionError != nil {
+		err := r.Connect()
+		if err != nil {
+			return nil, ErrConnectionToSourceFailed
+		}
+	}
+
+	var keys []string
+	iter := r.client.Scan(ctx, 0, pattern, count).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
+
+	return keys, nil
+}

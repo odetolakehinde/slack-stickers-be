@@ -31,7 +31,7 @@ func (c *Cron) handleTokenRefresh() func() {
 			var authDetails model.SlackAuthDetails
 
 			// Retrieve the stored authentication details
-			err := c.store.GetValue(ctx, key, &authDetails)
+			err := c.store.GetJSONValue(ctx, key, &authDetails)
 			if err != nil {
 				log.Err(err).Str("key", key).Msg("Failed to retrieve Slack auth details")
 				continue
@@ -49,7 +49,12 @@ func (c *Cron) handleTokenRefresh() func() {
 			authDetails.AuthedUser.RefreshToken = newRefreshToken
 
 			// Save the updated details back to Redis
-			err = c.store.SetValue(ctx, key, authDetails, 0)
+			bytes, err := json.Marshal(authDetails)
+			if err != nil {
+				log.Err(err).Msg("json.Marshal failed")
+			}
+
+			err = c.store.SetValue(ctx, key, string(bytes), 0)
 			if err != nil {
 				log.Err(err).Str("key", key).Msg("Failed to update Slack auth details in Redis")
 			}

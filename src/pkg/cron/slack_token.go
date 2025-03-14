@@ -95,7 +95,7 @@ func (c *Cron) refreshSlackToken(ctx context.Context, refreshToken string) (newA
 
 	if !response.Ok {
 		log.Error().Str("error", response.Error).Msg("Slack API returned an error")
-		return "", "", fmt.Errorf("Slack API error: %s", response.Error)
+		return "", "", fmt.Errorf("slack API error: %s", response.Error)
 	}
 
 	return response.AccessToken, response.RefreshToken, nil

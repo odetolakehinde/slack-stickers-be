@@ -6,11 +6,12 @@ import (
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog"
+
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 	"github.com/odetolakehinde/slack-stickers-be/src/store"
-	"github.com/rs/zerolog"
 )
 
 const (

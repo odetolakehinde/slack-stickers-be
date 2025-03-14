@@ -4,6 +4,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
@@ -92,7 +93,8 @@ func (c *Controller) getSlackService(ctx context.Context, teamID string) (slack.
 	var keyValue string
 
 	// get the token
-	err := c.store.GetValue(ctx, teamID, &keyValue)
+	key := fmt.Sprintf("%s:%s", model.RedisSlackAuthPrefix, teamID)
+	err := c.store.GetValue(ctx, key, &keyValue)
 	if err != nil {
 		log.Err(err).Msgf("redis.GetValue[%s] failed", teamID)
 		return slack.Provider{}, err

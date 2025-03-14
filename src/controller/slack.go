@@ -87,7 +87,9 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 	}
 
 	// save to redis
-	err = c.store.SetValue(ctx, authDetails.Team.ID, string(bytes), 0)
+	key := fmt.Sprintf("%s:%s", model.RedisSlackAuthPrefix, authDetails.Team.ID)
+
+	err = c.store.SetValue(ctx, key, string(bytes), 0)
 	if err != nil {
 		log.Err(err).Msg("store.SetValue failed")
 		return err
@@ -100,7 +102,8 @@ func (c *Controller) SaveAuthDetails(ctx context.Context, authDetails model.Slac
 func (c *Controller) RemoveAuthDetails(ctx context.Context, teamID string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "RemoveAuthDetails").Logger()
 
-	if err := c.store.DeleteValue(ctx, teamID); err != nil {
+	key := fmt.Sprintf("%s:%s", model.RedisSlackAuthPrefix, teamID)
+	if err := c.store.DeleteValue(ctx, key); err != nil {
 		log.Err(err).Msg("store.DeleteValue failed")
 		return err
 	}

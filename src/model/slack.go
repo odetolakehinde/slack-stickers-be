@@ -1,5 +1,9 @@
 package model
 
+// RedisSlackAuthPrefix is the key prefix used for storing Slack authentication details in Redis.
+// Each team's authentication data is stored with a key format of "RedisSlackAuthPrefix:team_id".
+const RedisSlackAuthPrefix = "slack_auth"
+
 type (
 	// SlackAuthDetails schema
 	//SlackAuthDetails struct {

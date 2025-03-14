@@ -30,6 +30,11 @@ const (
 	// SlackAppToken for app level token
 	SlackAppToken = "SLACK_APP_TOKEN"
 
+	// SlackClientID is the client ID used to authenticate with Slack
+	SlackClientID = "SLACK_CLIENT_ID"
+	// SlackClientSecret is the client secret used to authenticate with Slack
+	SlackClientSecret = "SLACK_CLIENT_SECRET"
+
 	// TenorAPIKey is tenor api key
 	TenorAPIKey = "TENOR_API_KEY"
 )

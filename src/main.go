@@ -24,6 +24,7 @@ import (
 
 	"github.com/odetolakehinde/slack-stickers-be/src/api"
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
+	"github.com/odetolakehinde/slack-stickers-be/src/pkg/cron"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/middleware"
@@ -105,6 +106,9 @@ func main() {
 		}
 	}()
 
+	jobs := cron.New(logger, env, db, *application)
+	jobs.Start() // starts the cron scheduled task
+
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
 	quit := make(chan os.Signal, 1)
@@ -125,6 +129,10 @@ func main() {
 	case <-ctx.Done():
 		applicationLogger.Info().Msgf("timeout of 5 seconds.")
 	default:
+	}
+
+	if err := jobs.Shutdown(); err != nil {
+		applicationLogger.Info().Msgf("error shutting down cron jobs: %v\n", err)
 	}
 
 	applicationLogger.Info().Msgf("Server exiting")

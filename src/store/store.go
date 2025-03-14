@@ -13,6 +13,7 @@ import (
 type Store interface {
 	GetValue(ctx context.Context, key string, result interface{}) error
 	GetStringValue(ctx context.Context, key string) (string, error)
+	GetJSONValue(ctx context.Context, key string, dest interface{}) error
 	SetValue(ctx context.Context, key string, value interface{}, ttl time.Duration) error
 	DeleteValue(ctx context.Context, key string) error
 	ScanKeys(ctx context.Context, pattern string, count int64) ([]string, error)

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"os"
 	"strings"
 	"time"
@@ -95,6 +96,25 @@ func (r *Redis) GetValue(ctx context.Context, key string, result interface{}) er
 		return ErrFailedToRetrieveValue
 	}
 	return nil
+}
+
+// GetJSONValue retrieves a value from Redis and unmarshals it into the provided destination struct.
+//
+// It expects the stored value to be marshaled in JSON format
+func (r *Redis) GetJSONValue(ctx context.Context, key string, dest interface{}) error {
+	if r.connectionError != nil {
+		// attempt to reconnect
+		err := r.Connect()
+		if err != nil {
+			return ErrConnectionToSourceFailed
+		}
+	}
+	data, err := r.client.Get(ctx, key).Bytes()
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, dest)
 }
 
 // GetStringValue retrieves the value of a key from inside redis as string

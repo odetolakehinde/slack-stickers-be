@@ -50,6 +50,12 @@ func (c *Cron) cronJobs() gocron.Scheduler {
 	if err != nil {
 		c.Logger.Err(err).Msg("gocron.NewScheduler failed")
 	}
+	//
+	if _, err := cronScheduler.NewJob(
+		gocron.DurationJob(sixHourDuration), // runs every 6 hours
+		gocron.NewTask(c.handleTokenRefresh())); err != nil {
+		c.Logger.Err(err).Msg("c.handleRefreshingAccessTokens job failed")
+	}
 
 	return cronScheduler
 }

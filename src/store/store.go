@@ -21,7 +21,7 @@ type Store interface {
 
 var (
 	// ErrConnectionToSourceFailed if the connection to the data source cannot be established
-	ErrConnectionToSourceFailed = errors.New("connection to date source cannot be established")
+	ErrConnectionToSourceFailed = errors.New("connection to data source cannot be established")
 	// ErrFailedToRetrieveValue if there is issue retrieving the value from source
 	ErrFailedToRetrieveValue = errors.New("failed to retrieve the value from source")
 )

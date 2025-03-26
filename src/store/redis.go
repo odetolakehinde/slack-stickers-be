@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"os"
 	"strings"
 	"time"
@@ -97,6 +98,25 @@ func (r *Redis) GetValue(ctx context.Context, key string, result interface{}) er
 	return nil
 }
 
+// GetJSONValue retrieves a value from Redis and unmarshals it into the provided destination struct.
+//
+// It expects the stored value to be marshaled in JSON format
+func (r *Redis) GetJSONValue(ctx context.Context, key string, dest interface{}) error {
+	if r.connectionError != nil {
+		// attempt to reconnect
+		err := r.Connect()
+		if err != nil {
+			return ErrConnectionToSourceFailed
+		}
+	}
+	data, err := r.client.Get(ctx, key).Bytes()
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, dest)
+}
+
 // GetStringValue retrieves the value of a key from inside redis as string
 func (r *Redis) GetStringValue(ctx context.Context, key string) (string, error) {
 	if r.connectionError != nil {
@@ -128,4 +148,25 @@ func (r *Redis) DeleteValue(ctx context.Context, key string) error {
 		return res.Err()
 	}
 	return nil
+}
+
+// ScanKeys retrieves all keys matching a pattern
+func (r *Redis) ScanKeys(ctx context.Context, pattern string, count int64) ([]string, error) {
+	if r.connectionError != nil {
+		err := r.Connect()
+		if err != nil {
+			return nil, ErrConnectionToSourceFailed
+		}
+	}
+
+	var keys []string
+	iter := r.client.Scan(ctx, 0, pattern, count).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
+
+	return keys, nil
 }

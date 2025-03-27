@@ -37,7 +37,7 @@ func generateSearchModalRequest(channelID string) slack.ModalViewRequest {
 		Blocks:          blocks,
 		Close:           closeText,
 		Submit:          submitText,
-		PrivateMetadata: model.InitialDataSearchID,
+		PrivateMetadata: model.SlackShortcutCallbackID,
 		CallbackID:      channelID, // we use the channel ID
 		// ClearOnClose:    false,
 		// NotifyOnClose:   false,

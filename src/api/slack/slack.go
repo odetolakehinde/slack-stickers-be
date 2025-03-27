@@ -106,6 +106,16 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 		userID := i.User.ID
 
 		switch i.Type {
+		case model.MessageActionType:
+			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, channelID, teamID)
+			if err != nil {
+				log.Err(err).Msg("controller.ShowSearchModal failed")
+				restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			c.String(http.StatusOK, "success")
+
 		case model.ShortcutType:
 			err = s.controller.ShowSearchModal(context.Background(), i.TriggerID, i.CallbackID, teamID)
 			if err != nil {
@@ -152,8 +162,7 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			}
 
 			// this is the initial search
-			if i.View.PrivateMetadata == model.InitialDataSearchID {
-				// Note there might be a better way to get this info, but I figured this structure out from looking at the json response
+			if i.View.PrivateMetadata == model.SlackShortcutCallbackID {
 				tag = i.View.State.Values["Tag"]["tag"].Value
 			}
 		case model.BlockActionsViewType:

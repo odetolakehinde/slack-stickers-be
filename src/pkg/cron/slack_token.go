@@ -38,15 +38,15 @@ func (c *Cron) handleTokenRefresh() func() {
 			}
 
 			// Refresh the authed user token
-			newAccessToken, newRefreshToken, err := c.refreshSlackToken(ctx, authDetails.AuthedUser.RefreshToken)
+			newAccessToken, newRefreshToken, err := c.refreshSlackToken(ctx, authDetails.RefreshToken)
 			if err != nil {
 				log.Err(err).Str("team_id", authDetails.Team.ID).Msg("Failed to refresh Slack token")
 				continue
 			}
 
 			// Update the authentication details
-			authDetails.AuthedUser.AccessToken = newAccessToken
-			authDetails.AuthedUser.RefreshToken = newRefreshToken
+			authDetails.AccessToken = newAccessToken
+			authDetails.RefreshToken = newRefreshToken
 
 			// Save the updated details back to Redis
 			bytes, err := json.Marshal(authDetails)

@@ -34,7 +34,7 @@ type Operations interface {
 
 	GetStickerSearchResult(ctx context.Context, teamID, userID, channelID, tag string, threadTS, mentionTS *string) error
 	CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error
-	SendSticker(ctx context.Context, teamID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
+	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
 	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
 
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
@@ -108,9 +108,6 @@ func (c *Controller) getSlackService(ctx context.Context, teamID string) (slack.
 	}
 
 	accessToken := authDetails.AccessToken
-	if authDetails.AuthedUser.AccessToken != "" {
-		accessToken = authDetails.AuthedUser.AccessToken
-	}
 
 	s := slack.New(c.logger, c.env, accessToken)
 	return *s, nil

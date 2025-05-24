@@ -212,6 +212,10 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 			model.StickerImageBlockID,
 			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
 		),
+		slack.NewSectionBlock(
+			slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s>.", userID), false, false),
+			nil, nil,
+		),
 		slack.NewContextBlock(
 			model.StickerContextBlockID,
 			contextElements...,

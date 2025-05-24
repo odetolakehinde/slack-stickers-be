@@ -197,7 +197,7 @@ func (p *Provider) CancelStickerPreview(_ context.Context, channelID, responseUR
 }
 
 // SendStickerToChannel sends the specified sticker to the Slack channel as a permanent message,
-func (p *Provider) SendStickerToChannel(_ context.Context, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
+func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
 
 	contextElements := []slack.MixedElement{

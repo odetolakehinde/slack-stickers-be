@@ -114,15 +114,8 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID
 //
 //   - threadTS: The timestamp of a message in the thread where the preview is posted, if any.
 //   - mentionTS: The timestamp of the message to be deleted. This is only valid if the bot was mentioned.
-func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string, threadTS, mentionTS *string, isDM bool, responseURL string) error {
+func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string, threadTS, _ *string, isDM bool, responseURL string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowStickerPreview").Logger()
-
-	// delete original message if bot was mentioned to search for gif
-	if mentionTS != nil {
-		if _, _, err := p.client.DeleteMessage(channelID, *mentionTS); err != nil {
-			log.Err(err).Msg("DeleteMessage failed")
-		}
-	}
 
 	sticker := model.StickerBlockMetadata{
 		Tag:      tag,

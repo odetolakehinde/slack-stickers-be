@@ -135,7 +135,7 @@ func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag,
 
 	// If in DM, use response_url instead of PostMessage
 	if isDM && responseURL != "" {
-		return p.sendMessageViaResponseURL(responseURL, slack.ResponseTypeEphemeral, false, blocks.BlockSet)
+		return p.sendMessageViaResponseURL(responseURL, slack.ResponseTypeEphemeral, blocks.BlockSet)
 	}
 
 	msgOptions := []slack.MsgOption{
@@ -227,7 +227,7 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 
 	// If in DM, use response_url instead of PostMessage
 	if isDM && responseURL != "" {
-		return p.sendMessageViaResponseURL(responseURL, slack.ResponseTypeInChannel, true, blocks)
+		return p.sendMessageViaResponseURL(responseURL, slack.ResponseTypeInChannel, blocks)
 	}
 
 	msgOptions := []slack.MsgOption{
@@ -266,13 +266,13 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	return nil
 }
 
-func (p *Provider) sendMessageViaResponseURL(responseURL, responseType string, deleteOriginal bool, blocks []slack.Block) error {
+func (p *Provider) sendMessageViaResponseURL(responseURL, responseType string, blocks []slack.Block) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "sendMessageViaResponseURL").Logger()
 
 	payload := map[string]any{
 		"response_type":   responseType, // "in_channel" or "ephemeral"
 		"blocks":          blocks,
-		"delete_original": deleteOriginal,
+		"delete_original": responseType == slack.ResponseTypeInChannel, // this deletes the original ephemeral message when user sends the sticker in chat
 	}
 
 	resp, err := p.httpClient.R().

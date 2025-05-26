@@ -131,7 +131,9 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 					ImgURL: details.ImageURL,
 				}
 
-				err = s.controller.SendSticker(context.Background(), teamID, userID, channelToSendSticker, responseURL, sticker)
+				isDM := strings.HasPrefix(channelToSendSticker, "D")
+
+				err = s.controller.SendSticker(context.Background(), teamID, userID, channelToSendSticker, responseURL, isDM, sticker)
 				if err != nil {
 					log.Err(err).Msg("controller.SendSticker failed")
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -172,7 +174,9 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 							return
 						}
 
-						err = s.controller.SendSticker(context.Background(), teamID, userID, channelID, responseURL, sticker)
+						isDM := strings.HasPrefix(channelID, "D")
+
+						err = s.controller.SendSticker(context.Background(), teamID, userID, channelID, responseURL, isDM, sticker)
 						if err != nil {
 							log.Err(err).Msg("controller.SendSticker failed")
 							restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -275,6 +279,8 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 			return
 		}
 
+		isDM := req.ChannelName == "directmessage"
+
 		if len(req.Text) < 1 {
 			// they did not pass anything else asides the slash command
 			if err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID, req.TeamID); err != nil {
@@ -283,7 +289,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 				return
 			}
 		} else {
-			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil, nil); err != nil {
+			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil, nil, isDM, req.ResponseURL); err != nil {
 				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 				c.String(http.StatusBadRequest, err.Error())
 				return
@@ -379,7 +385,7 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 					teamID := req.TeamID
 					userID := req.Event.User
 
-					if err := s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS, &req.Event.Timestamp); err != nil {
+					if err := s.controller.GetStickerSearchResult(context.Background(), channelID, teamID, userID, textWithoutMention, &req.Event.ThreadTS, &req.Event.Timestamp, false, ""); err != nil {
 						log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 						c.String(http.StatusBadRequest, err.Error())
 						return

@@ -3,6 +3,7 @@ package slack
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/slack-go/slack"
@@ -113,7 +114,7 @@ func (p *Provider) ShowSearchResultModal(_ context.Context, triggerID, channelID
 //
 //   - threadTS: The timestamp of a message in the thread where the preview is posted, if any.
 //   - mentionTS: The timestamp of the message to be deleted. This is only valid if the bot was mentioned.
-func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string, threadTS, mentionTS *string) error {
+func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag, imageURL string, threadTS, mentionTS *string, isDM bool, responseURL string) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowStickerPreview").Logger()
 
 	// delete original message if bot was mentioned to search for gif
@@ -131,6 +132,11 @@ func (p *Provider) ShowStickerPreview(_ context.Context, userID, channelID, tag,
 	}
 
 	blocks := createStickerPreviewBlock(sticker, true)
+
+	// If in DM, use response_url instead of PostMessage
+	if isDM && responseURL != "" {
+		return p.sendMessageViaResponseURL(responseURL, slack.ResponseTypeEphemeral, false, blocks.BlockSet)
+	}
 
 	msgOptions := []slack.MsgOption{
 		slack.MsgOptionPostEphemeral(userID),
@@ -170,9 +176,6 @@ func (p *Provider) ShuffleStickerPreview(_ context.Context, userID, channelID, r
 		msgOptions = append(msgOptions, slack.MsgOptionTS(*sticker.ThreadTS))
 	}
 
-	msgOptions = append(msgOptions, slack.MsgOptionDisableMediaUnfurl())
-	msgOptions = append(msgOptions, slack.MsgOptionDisableLinkUnfurl())
-
 	if _, _, err := p.client.PostMessage(channelID, msgOptions...); err != nil {
 		log.Err(err).Msg("PostMessage failed")
 		return err
@@ -197,12 +200,12 @@ func (p *Provider) CancelStickerPreview(_ context.Context, channelID, responseUR
 }
 
 // SendStickerToChannel sends the specified sticker to the Slack channel as a permanent message,
-func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
+func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, responseURL string, isDM bool, sticker model.StickerBlockMetadata) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
 
 	contextElements := []slack.MixedElement{
 		slack.NewTextBlockObject(slack.MarkdownType, FooterText, false, false),
-		slack.NewImageBlockElement("https://res.cloudinary.com/slackstickers/image/upload/v1740350898/Slack%20Stickers/slackstickers-logo.svg", "slack stickers logo"),
+		slack.NewImageBlockElement(IconURL, "slack stickers logo"),
 	}
 
 	blocks := []slack.Block{
@@ -220,6 +223,11 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 			model.StickerContextBlockID,
 			contextElements...,
 		),
+	}
+
+	// If in DM, use response_url instead of PostMessage
+	if isDM && responseURL != "" {
+		return p.sendMessageViaResponseURL(responseURL, slack.ResponseTypeInChannel, true, blocks)
 	}
 
 	msgOptions := []slack.MsgOption{
@@ -255,5 +263,35 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	}
 
 	p.logger.Info().Msgf("sticker successfully sent to channel %s at %s", channelID, timestamp)
+	return nil
+}
+
+func (p *Provider) sendMessageViaResponseURL(responseURL, responseType string, deleteOriginal bool, blocks []slack.Block) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "sendMessageViaResponseURL").Logger()
+
+	payload := map[string]any{
+		"response_type":   responseType, // "in_channel" or "ephemeral"
+		"blocks":          blocks,
+		"delete_original": deleteOriginal,
+	}
+
+	resp, err := p.httpClient.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(payload).
+		Post(responseURL)
+	if err != nil {
+		log.Err(err).Msg("failed to send responseURL request")
+		return fmt.Errorf("failed to send responseURL request: %w", err)
+	}
+
+	if resp.StatusCode() != http.StatusOK {
+		log.Error().
+			Int("status", resp.StatusCode()).
+			Str("body", resp.String()).
+			Msg("non-200 response from response_url")
+		return fmt.Errorf("response_url returned non-200: %s", resp.String())
+	}
+
+	log.Info().Msg("response sent successfully via response_url")
 	return nil
 }

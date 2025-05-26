@@ -98,6 +98,8 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 			return
 		}
 
+		c.Status(http.StatusOK) // Respond wiht 200 status code
+
 		teamID := i.Team.ID
 		channelID := i.Channel.ID
 		responseURL := i.ResponseURL
@@ -279,6 +281,8 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 			return
 		}
 
+		c.Status(http.StatusOK) // Respond wiht 200 status code
+
 		isDM := req.ChannelName == "directmessage"
 
 		if len(req.Text) < 1 {
@@ -362,6 +366,8 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			c.JSON(http.StatusOK, gin.H{"challenge": req.Challenge})
 			return
 		}
+
+		c.Status(http.StatusOK) // Respond wiht 200 status code
 
 		if req.Event.Type == model.EventTypeAppMention {
 			// Example message text -> "<@U0LAN0Z89> blah blah"

@@ -34,6 +34,8 @@ const (
 	SlackClientID = "SLACK_CLIENT_ID"
 	// SlackClientSecret is the client secret used to authenticate with Slack
 	SlackClientSecret = "SLACK_CLIENT_SECRET"
+	// SlackSigningSecret is slacks signing secret
+	SlackSigningSecret = "SLACK_SIGNING_SECRET"
 
 	// TenorAPIKey is tenor api key
 	TenorAPIKey = "TENOR_API_KEY"

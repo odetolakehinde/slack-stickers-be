@@ -281,7 +281,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 			return
 		}
 
-		c.Status(http.StatusOK) // Respond wiht 200 status code
+		c.Status(http.StatusOK)
 
 		isDM := req.ChannelName == "directmessage"
 
@@ -293,7 +293,17 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 				return
 			}
 		} else {
-			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, req.Text, nil, nil, isDM, req.ResponseURL); err != nil {
+			query := strings.TrimSpace(strings.ToLower(req.Text))
+			if strings.EqualFold(query, "!help") {
+				if err := s.controller.SendHelp(context.Background(), req.TeamID, req.UserID, req.ChannelID, req.ResponseURL, isDM); err != nil {
+					log.Err(err).Msg("controller.SendHelp failed.")
+					c.String(http.StatusBadRequest, err.Error())
+					return
+				}
+				return
+			}
+
+			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, query, nil, nil, isDM, req.ResponseURL); err != nil {
 				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
 				c.String(http.StatusBadRequest, err.Error())
 				return

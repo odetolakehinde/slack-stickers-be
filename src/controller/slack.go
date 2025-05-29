@@ -204,3 +204,16 @@ func (c *Controller) ShuffleSticker(ctx context.Context, teamID, userID, channel
 
 	return nil
 }
+
+// SendHelp to send help
+func (c *Controller) SendHelp(ctx context.Context, teamID, userID, channelID, responseURL string, isDM bool) error {
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendHelp").Logger()
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
+
+	log.Info().Str("channelID", channelID).Msg("show help")
+	return slackService.ShowHelp(ctx, userID, channelID, responseURL, isDM)
+}

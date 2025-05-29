@@ -133,3 +133,50 @@ func createStickerPreviewBlock(sticker model.StickerBlockMetadata, isShuffle boo
 		BlockSet: blocks,
 	}
 }
+
+func generateHelpBlocks() slack.Blocks {
+	headerText := slack.NewTextBlockObject(slack.MarkdownType, "*Need help using `Stickers For Slack`?*", false, false)
+	headerSection := slack.NewSectionBlock(headerText, nil, nil)
+
+	usageText := slack.NewTextBlockObject(slack.MarkdownType,
+		"*Slash Command:*\n"+
+			"• `/sticker happy dance`\n\n"+
+			"*Mention Format:*\n"+
+			"this can be used in threads and channels:\n"+
+			"• `@sticker search excited cat`\n"+
+			"• `@sticker find dancing dog`\n"+
+			"• `@sticker g celebration`\n"+
+			"• `@sticker gif party time`\n\n"+
+			"*Open Modal:*\n"+
+			"• Type `/sticker` and press Enter",
+		false, false,
+	)
+
+	usageSection := slack.NewSectionBlock(usageText, nil, nil)
+
+	// Buttons: View Docs and Cancel
+	viewDocsText := slack.NewTextBlockObject(slack.PlainTextType, "View Docs", false, false)
+	viewDocsButton := slack.NewButtonBlockElement(model.ActionIDViewDocs, "", viewDocsText)
+	viewDocsButton.URL = DocsURL
+	viewDocsButton.WithStyle(slack.StylePrimary)
+
+	cancelText := slack.NewTextBlockObject(slack.PlainTextType, "Cancel", false, false)
+	cancelButton := slack.NewButtonBlockElement(model.ActionIDCancelSticker, "", cancelText)
+	cancelButton.WithStyle(slack.StyleDanger)
+
+	actionBlock := slack.NewActionBlock(
+		model.StickerActionBlockID,
+		viewDocsButton,
+		cancelButton,
+	)
+
+	blocks := []slack.Block{
+		headerSection,
+		usageSection,
+		actionBlock,
+	}
+
+	return slack.Blocks{
+		BlockSet: blocks,
+	}
+}

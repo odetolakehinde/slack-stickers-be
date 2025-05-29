@@ -37,6 +37,8 @@ type Operations interface {
 	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, isDM bool, sticker model.StickerBlockMetadata) error
 	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
 
+	SendHelp(ctx context.Context, teamID, userID, channelID, responseURL string, isDM bool) error
+
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error
 	RemoveAuthDetails(ctx context.Context, teamID string) error
 }

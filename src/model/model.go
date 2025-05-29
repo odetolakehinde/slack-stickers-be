@@ -18,6 +18,8 @@ const (
 	ActionIDCancelSticker = "cancel-sticker"
 	// ActionIDSendSticker send sticker action ID
 	ActionIDSendSticker = "send-sticker"
+	// ActionIDViewDocs view docs action ID
+	ActionIDViewDocs = "view-docs"
 
 	// MaxResults during search from cloudinary
 	MaxResults = 50

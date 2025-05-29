@@ -1,5 +1,5 @@
-// Package media houses all media related APIs
-package media
+// Package slack houses all slack related APIs
+package slack
 
 import (
 	"context"

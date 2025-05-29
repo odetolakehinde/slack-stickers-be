@@ -11,4 +11,7 @@ const (
 	IconURL = "https://res.cloudinary.com/slackstickers/image/upload/v1740350898/Slack%20Stickers/slackstickers-logo.svg"
 	// WebsiteURL is the website url
 	WebsiteURL = "slackstickers.com"
+
+	// DocsURL is the doucmentation url
+	DocsURL = "https://docs.slackstickers.com"
 )

@@ -259,6 +259,30 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	return nil
 }
 
+// ShowHelp to show help
+func (p *Provider) ShowHelp(_ context.Context, userID, channelID, responseURL string, isDM bool) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "ShowHelp").Logger()
+
+	blocks := generateHelpBlocks()
+
+	// If in DM, use response_url instead of PostMessage
+	if isDM && responseURL != "" {
+		return p.sendMessageViaResponseURL(responseURL, slack.ResponseTypeEphemeral, blocks.BlockSet)
+	}
+
+	msgOptions := []slack.MsgOption{
+		slack.MsgOptionPostEphemeral(userID),
+		slack.MsgOptionBlocks(blocks.BlockSet...),
+	}
+
+	if _, _, err := p.client.PostMessage(channelID, msgOptions...); err != nil {
+		log.Err(err).Msg("PostMessage failed")
+		return err
+	}
+
+	return nil
+}
+
 func (p *Provider) sendMessageViaResponseURL(responseURL, responseType string, blocks []slack.Block) error {
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "sendMessageViaResponseURL").Logger()
 

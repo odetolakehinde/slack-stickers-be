@@ -32,9 +32,9 @@ type Operations interface {
 	ShowSearchModal(ctx context.Context, triggerID, channelID, teamID string) error
 	ShowSearchResultModal(ctx context.Context, triggerID, channelID, teamID string, sticker model.StickerBlockMetadata, externalViewID *string) error
 
-	GetStickerSearchResult(ctx context.Context, teamID, userID, channelID, tag string, threadTS, mentionTS *string) error
+	GetStickerSearchResult(ctx context.Context, teamID, userID, channelID, tag string, threadTS, mentionTS *string, isDM bool, responseURL string) error
 	CancelSticker(ctx context.Context, teamID, channelID, responseURL string) error
-	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
+	SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, isDM bool, sticker model.StickerBlockMetadata) error
 	ShuffleSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error
 
 	SaveAuthDetails(ctx context.Context, authDetails model.SlackAuthDetails) error

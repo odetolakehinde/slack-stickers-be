@@ -42,24 +42,24 @@ type PageInfo struct {
 }
 
 // Build is a GenericResponse constructor
-func Build(code int, data, page interface{}, message, error *string) GenericResponse {
+func Build(code int, data, page interface{}, message, err *string) GenericResponse {
 	return GenericResponse{
 		Code:    code,
 		Message: message,
 		Data:    data,
 		Page:    page,
-		Error:   error,
+		Error:   err,
 	}
 }
 
 // ErrorResponse template for error responses
-func ErrorResponse(c *gin.Context, code int, error string) {
+func ErrorResponse(c *gin.Context, code int, err string) {
 	c.JSON(code, Build(
 		code,
 		nil,
 		nil,
 		nil,
-		helper.GetStringPointer(error)))
+		helper.GetStringPointer(err)))
 	c.Abort()
 }
 

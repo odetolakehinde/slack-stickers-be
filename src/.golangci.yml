@@ -1,26 +1,31 @@
-# https://github.com/golangci/golangci-lint#config-file
+version: "2"
 run:
   concurrency: 8
-  timeout: 120s
   tests: false
-  skip-files:
-    - docs/docs.go
-linters: # Descriptions: https://github.com/golangci/awesome-go-linters
-  # To see those enabled by default `golangci-lint help linters`
-  enable: # These are disabled by default by golangci-lint
-#    - dogsled
+linters:
+  enable:
     - gochecknoinits
     - goconst
-#    - godox
-    - goimports
     - revive
-#    - gosec
     - rowserrcheck
-    - stylecheck
+    - staticcheck
     - unparam
-#    - gci
-linters-settings:
-  goimports:
-    local-prefixes: github.com/odetolakehinde
-issues:
-  exclude-use-default: false
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/odetolakehinde
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -183,12 +183,12 @@ func GetTimeVal(timeVal *time.Time) time.Time {
 }
 
 // RandomNumbers generates random numerics with length specified
-func RandomNumbers(max int) string {
+func RandomNumbers(length int) string {
 	table := [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
 
-	b := make([]byte, max)
-	n, err := io.ReadAtLeast(rand.Reader, b, max)
-	if n != max {
+	b := make([]byte, length)
+	n, err := io.ReadAtLeast(rand.Reader, b, length)
+	if n != length {
 		panic(err)
 	}
 	for i := 0; i < len(b); i++ {
@@ -228,10 +228,10 @@ func ToSQLFloat64(f float64) sql.NullFloat64 {
 }
 
 // GenerateKey generate random key
-func GenerateKey(max int) (string, error) {
+func GenerateKey(length int) (string, error) {
 	table := [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'}
-	b := make([]byte, max)
-	_, err := io.ReadAtLeast(rand.Reader, b, max)
+	b := make([]byte, length)
+	_, err := io.ReadAtLeast(rand.Reader, b, length)
 	if err != nil {
 		return "", err
 	}
@@ -242,10 +242,10 @@ func GenerateKey(max int) (string, error) {
 }
 
 // GenerateRandomDigits generate random digits
-func GenerateRandomDigits(max int) (string, error) {
+func GenerateRandomDigits(length int) (string, error) {
 	table := [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'}
-	b := make([]byte, max)
-	_, err := io.ReadAtLeast(rand.Reader, b, max)
+	b := make([]byte, length)
+	_, err := io.ReadAtLeast(rand.Reader, b, length)
 	if err != nil {
 		return "", err
 	}

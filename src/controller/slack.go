@@ -112,7 +112,7 @@ func (c *Controller) RemoveAuthDetails(ctx context.Context, teamID string) error
 }
 
 // GetStickerSearchResult shows up the search result
-func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string, threadTS, mentionTS *string) error {
+func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, teamID, userID, text string, threadTS, mentionTS *string, isDM bool, responseURL string) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "GetStickerSearchResult").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -134,7 +134,7 @@ func (c *Controller) GetStickerSearchResult(ctx context.Context, channelID, team
 
 	imageURL := response.Results[0].MediaFormats.Gif.URL
 
-	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL, threadTS, mentionTS)
+	return slackService.ShowStickerPreview(ctx, userID, channelID, text, imageURL, threadTS, mentionTS, isDM, responseURL)
 }
 
 // CancelSticker to close sticker preview block
@@ -150,7 +150,7 @@ func (c *Controller) CancelSticker(ctx context.Context, teamID, channelID, respo
 }
 
 // SendSticker to send sticker
-func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, sticker model.StickerBlockMetadata) error {
+func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID, responseURL string, isDM bool, sticker model.StickerBlockMetadata) error {
 	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendSticker").Logger()
 	slackService, err := c.getSlackService(ctx, teamID)
 	if err != nil {
@@ -159,7 +159,7 @@ func (c *Controller) SendSticker(ctx context.Context, teamID, userID, channelID,
 	}
 
 	log.Info().Str("channelID", channelID).Msg("sending sticker")
-	return slackService.SendStickerToChannel(ctx, userID, channelID, responseURL, sticker)
+	return slackService.SendStickerToChannel(ctx, userID, channelID, responseURL, isDM, sticker)
 }
 
 // ShuffleSticker to shuffle sticker

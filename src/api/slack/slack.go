@@ -4,7 +4,6 @@ package slack
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -20,22 +19,23 @@ import (
 	restModel "github.com/odetolakehinde/slack-stickers-be/src/api/model"
 	"github.com/odetolakehinde/slack-stickers-be/src/controller"
 	"github.com/odetolakehinde/slack-stickers-be/src/model"
+	"github.com/odetolakehinde/slack-stickers-be/src/model/env"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/environment"
 	"github.com/odetolakehinde/slack-stickers-be/src/pkg/helper"
 )
 
 type slackHandler struct {
-	logger      zerolog.Logger
-	controller  controller.Operations
-	environment *environment.Env
+	logger     zerolog.Logger
+	controller controller.Operations
+	env        *environment.Env
 }
 
 // New creates a new instance of the auth rest handler
 func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *environment.Env) {
 	slack := slackHandler{
-		logger:      l,
-		controller:  c,
-		environment: env,
+		logger:     l,
+		controller: c,
+		env:        env,
 	}
 
 	slackGroup := r.Group("/slack") // ,slack.controller.Middleware().AuthMiddleware(),
@@ -73,10 +73,10 @@ func (s *slackHandler) sendMessage() gin.HandlerFunc {
 func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log := s.logger.With().Str(helper.LogEndpointLevel, c.FullPath()).Logger()
-		requestBody, err := io.ReadAll(c.Request.Body)
+		requestBody, code, err := validateSlackSignature(c, log, s.env.Get(env.SlackSigningSecret))
 		if err != nil {
-			log.Err(err).Msg("io.ReadAll failed")
-			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			log.Err(err).Msg("validateSlackSignature failed")
+			restModel.ErrorResponse(c, code, err.Error())
 			return
 		}
 
@@ -260,10 +260,10 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 
 		var req restModel.ShortcutPayload
 
-		requestBody, err := io.ReadAll(c.Request.Body)
+		requestBody, code, err := validateSlackSignature(c, log, s.env.Get(env.SlackSigningSecret))
 		if err != nil {
-			log.Err(err).Msg("io.ReadAll failed")
-			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			log.Err(err).Msg("validateSlackSignature failed")
+			restModel.ErrorResponse(c, code, err.Error())
 			return
 		}
 
@@ -349,10 +349,10 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 
 		var req restModel.SlackEventCallback
 
-		requestBody, err := io.ReadAll(c.Request.Body)
+		requestBody, code, err := validateSlackSignature(c, log, s.env.Get(env.SlackSigningSecret))
 		if err != nil {
-			log.Err(err).Msg("io.ReadAll failed")
-			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			log.Err(err).Msg("validateSlackSignature failed")
+			restModel.ErrorResponse(c, code, err.Error())
 			return
 		}
 

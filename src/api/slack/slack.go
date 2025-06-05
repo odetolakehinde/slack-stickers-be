@@ -294,7 +294,7 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 			}
 		} else {
 			query := strings.TrimSpace(strings.ToLower(req.Text))
-			if strings.EqualFold(query, "!help") {
+			if strings.EqualFold(query, "help") {
 				if err := s.controller.SendHelp(context.Background(), req.TeamID, req.UserID, req.ChannelID, req.ResponseURL, isDM); err != nil {
 					log.Err(err).Msg("controller.SendHelp failed.")
 					c.String(http.StatusBadRequest, err.Error())

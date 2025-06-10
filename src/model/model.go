@@ -2,8 +2,8 @@
 package model
 
 const (
-	// InitialDataSearchID for when the initial search is done
-	InitialDataSearchID = "initial-data-search"
+	// SlackShortcutCallbackID is the callback id used for shortcuts
+	SlackShortcutCallbackID = "send_sticker_shortcut"
 
 	// StickerActionBlockID is the block id for the sticker actions button
 	StickerActionBlockID = "sticker_action_block-id"
@@ -29,6 +29,9 @@ const (
 
 	// ShortcutType for shortcuts used
 	ShortcutType = "shortcut"
+
+	// MessageActionType for message shortcut or action triggered from message context
+	MessageActionType = "message_action"
 
 	// BlockActionsViewType for View block actions interaction
 	BlockActionsViewType = "block_actions"

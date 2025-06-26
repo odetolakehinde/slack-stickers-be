@@ -226,6 +226,8 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	msgOptions := []slack.MsgOption{
 		slack.MsgOptionAsUser(true),
 		slack.MsgOptionBlocks(blocks...),
+		slack.MsgOptionDisableLinkUnfurl(),
+		slack.MsgOptionDisableMediaUnfurl(),
 	}
 
 	// If threadTs is not nil, include it in the message options

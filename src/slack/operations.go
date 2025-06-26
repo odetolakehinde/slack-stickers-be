@@ -197,7 +197,7 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
 
 	contextElements := []slack.MixedElement{
-		slack.NewTextBlockObject(slack.MarkdownType, FooterText, false, false),
+		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("<%s|slackstickers.com>", DocsURL), false, false),
 		slack.NewImageBlockElement(IconURL, "slack stickers logo"),
 	}
 

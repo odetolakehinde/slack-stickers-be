@@ -314,3 +314,19 @@ func (p *Provider) sendMessageViaResponseURL(responseURL, responseType string, b
 	log.Info().Msg("response sent successfully via response_url")
 	return nil
 }
+
+// JoinChannel if not present
+func (p *Provider) JoinChannel(_ context.Context, channelID string) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "JoinChannel").Logger()
+
+	info, err := p.client.GetConversationInfo(channelID, false)
+	if err == nil && !info.IsMember {
+		_, _, _, err := p.client.JoinConversation(channelID)
+		if err != nil {
+			log.Err(err).Msg("Failed to join channel")
+		}
+
+	}
+
+	return nil
+}

@@ -4,7 +4,6 @@ package slack
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -384,12 +383,10 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			return
 		}
 
-		c.Status(http.StatusOK) // Respond wiht 200 status code
-		fmt.Println("event is %+v\n", req)
+		c.Status(http.StatusOK) // Respond with 200 status code
 
 		if req.Event.Type == model.EventTypeAppMention {
 
-			fmt.Println("it is mention")
 			if err := s.controller.JoinChannel(c, req.TeamID, req.Event.Channel); err != nil {
 				log.Err(err).Msg("controller.JoinChannel failed.")
 			}

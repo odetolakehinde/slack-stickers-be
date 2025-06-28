@@ -197,8 +197,7 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
 
 	contextElements := []slack.MixedElement{
-		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("<%s|slackstickers.com>", DocsURL), false, false),
-		slack.NewImageBlockElement(IconURL, "slack stickers logo"),
+		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s> • <%s|Stickers For Slack>", userID, DocsURL), false, false),
 	}
 
 	blocks := []slack.Block{
@@ -207,10 +206,6 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 			sticker.Tag,
 			model.StickerImageBlockID,
 			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
-		),
-		slack.NewSectionBlock(
-			slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s>.", userID), false, false),
-			nil, nil,
 		),
 		slack.NewContextBlock(
 			model.StickerContextBlockID,

@@ -197,8 +197,7 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	log := p.logger.With().Str(helper.LogStrKeyMethod, "SendStickerToChannel").Logger()
 
 	contextElements := []slack.MixedElement{
-		slack.NewTextBlockObject(slack.MarkdownType, FooterText, false, false),
-		slack.NewImageBlockElement(IconURL, "slack stickers logo"),
+		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s> • <%s|Stickers For Slack>", userID, DocsURL), false, false),
 	}
 
 	blocks := []slack.Block{
@@ -207,10 +206,6 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 			sticker.Tag,
 			model.StickerImageBlockID,
 			slack.NewTextBlockObject(slack.PlainTextType, sticker.Tag, false, false),
-		),
-		slack.NewSectionBlock(
-			slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("_sent by_ <@%s>.", userID), false, false),
-			nil, nil,
 		),
 		slack.NewContextBlock(
 			model.StickerContextBlockID,
@@ -226,6 +221,8 @@ func (p *Provider) SendStickerToChannel(_ context.Context, userID, channelID, re
 	msgOptions := []slack.MsgOption{
 		slack.MsgOptionAsUser(true),
 		slack.MsgOptionBlocks(blocks...),
+		slack.MsgOptionDisableLinkUnfurl(),
+		slack.MsgOptionDisableMediaUnfurl(),
 	}
 
 	// If threadTs is not nil, include it in the message options
@@ -310,5 +307,21 @@ func (p *Provider) sendMessageViaResponseURL(responseURL, responseType string, b
 	}
 
 	log.Info().Msg("response sent successfully via response_url")
+	return nil
+}
+
+// JoinChannel if not present
+func (p *Provider) JoinChannel(_ context.Context, channelID string) error {
+	log := p.logger.With().Str(helper.LogStrKeyMethod, "JoinChannel").Logger()
+
+	info, err := p.client.GetConversationInfo(channelID, false)
+	if err == nil && !info.IsMember {
+		_, _, _, err := p.client.JoinConversation(channelID)
+		if err != nil {
+			log.Err(err).Msg("Failed to join channel")
+		}
+
+	}
+
 	return nil
 }

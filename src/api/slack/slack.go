@@ -285,6 +285,12 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 
 		isDM := req.ChannelName == "directmessage"
 
+		if !isDM {
+			if err := s.controller.JoinChannel(c, req.TeamID, req.ChannelID); err != nil {
+				log.Err(err).Msg("controller.JoinChannel failed.")
+			}
+		}
+
 		if len(req.Text) < 1 {
 			// they did not pass anything else asides the slash command
 			if err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID, req.TeamID); err != nil {
@@ -377,9 +383,14 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			return
 		}
 
-		c.Status(http.StatusOK) // Respond wiht 200 status code
+		c.Status(http.StatusOK) // Respond with 200 status code
 
 		if req.Event.Type == model.EventTypeAppMention {
+
+			if err := s.controller.JoinChannel(c, req.TeamID, req.Event.Channel); err != nil {
+				log.Err(err).Msg("controller.JoinChannel failed.")
+			}
+
 			// Example message text -> "<@U0LAN0Z89> blah blah"
 			// regexp to match mentions in the format <@USER_ID>
 			re := regexp.MustCompile(`<@([A-Za-z0-9]+)>`)

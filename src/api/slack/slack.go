@@ -4,6 +4,7 @@ package slack
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -138,6 +139,10 @@ func (s *slackHandler) interactivityUsed() gin.HandlerFunc {
 				err = s.controller.SendSticker(context.Background(), teamID, userID, channelToSendSticker, responseURL, isDM, sticker)
 				if err != nil {
 					log.Err(err).Msg("controller.SendSticker failed")
+					if errors.Is(err, helper.ErrChannelNotFound) {
+						helper.SendSlackModalError(c, helper.ChannelNotFoundResponse)
+						return
+					}
 					restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 					return
 				}
@@ -285,6 +290,12 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 
 		isDM := req.ChannelName == "directmessage"
 
+		if !isDM {
+			if err := s.controller.JoinChannel(c, req.TeamID, req.ChannelID); err != nil {
+				log.Err(err).Msg("controller.JoinChannel failed.")
+			}
+		}
+
 		if len(req.Text) < 1 {
 			// they did not pass anything else asides the slash command
 			if err = s.controller.ShowSearchModal(context.Background(), req.TriggerID, req.ChannelID, req.TeamID); err != nil {
@@ -305,7 +316,11 @@ func (s *slackHandler) slashCommandUsed() gin.HandlerFunc {
 
 			if err = s.controller.GetStickerSearchResult(context.Background(), req.ChannelID, req.TeamID, req.UserID, query, nil, nil, isDM, req.ResponseURL); err != nil {
 				log.Err(err).Msg("controller.GetStickerSearchResult failed.")
-				c.String(http.StatusBadRequest, err.Error())
+				if errors.Is(err, helper.ErrChannelNotFound) {
+					c.JSON(http.StatusOK, helper.ChannelNotFoundResponse)
+					return
+				}
+				c.JSON(http.StatusBadRequest, err.Error())
 				return
 			}
 		}
@@ -377,9 +392,14 @@ func (s *slackHandler) eventListener() gin.HandlerFunc {
 			return
 		}
 
-		c.Status(http.StatusOK) // Respond wiht 200 status code
+		c.Status(http.StatusOK) // Respond with 200 status code
 
 		if req.Event.Type == model.EventTypeAppMention {
+
+			if err := s.controller.JoinChannel(c, req.TeamID, req.Event.Channel); err != nil {
+				log.Err(err).Msg("controller.JoinChannel failed.")
+			}
+
 			// Example message text -> "<@U0LAN0Z89> blah blah"
 			// regexp to match mentions in the format <@USER_ID>
 			re := regexp.MustCompile(`<@([A-Za-z0-9]+)>`)

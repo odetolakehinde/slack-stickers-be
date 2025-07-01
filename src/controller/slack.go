@@ -217,3 +217,15 @@ func (c *Controller) SendHelp(ctx context.Context, teamID, userID, channelID, re
 	log.Info().Str("channelID", channelID).Msg("show help")
 	return slackService.ShowHelp(ctx, userID, channelID, responseURL, isDM)
 }
+
+// JoinChannel to join channel
+func (c *Controller) JoinChannel(ctx context.Context, teamID, channelID string) error {
+	log := c.logger.With().Str(helper.LogStrKeyMethod, "SendHelp").Logger()
+	slackService, err := c.getSlackService(ctx, teamID)
+	if err != nil {
+		log.Err(err).Str("teamID", teamID).Msg("failed to get Slack service")
+		return err
+	}
+
+	return slackService.JoinChannel(ctx, channelID)
+}
